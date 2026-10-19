@@ -62,6 +62,10 @@ function ask(msg,ok,cancel){return new Promise(res=>{const m=$('#modal');
 function cleanSession(s){return String(s||'').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'')||'serata'}
 function cleanUrl(u){u=String(u||'').trim().replace(/\/+$/,'');if(u&&!/^https?:\/\//i.test(u))u='https://'+u;return u}
 
+function alertBox(msg){return new Promise(res=>{const m=$('#modal');
+ m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p><button class="btn" id="mOk">OK</button></div>';m.classList.add('on');
+ $('#mOk').onclick=()=>{m.classList.remove('on');m.innerHTML='';res()}})}
+
 /* ---------- database (Firebase REST o locale) ---------- */
 let cfg={session:'',url:''};
 const DB={
@@ -88,13 +92,15 @@ const DB={
 
 /* ---------- stato ---------- */
 let S={participants:{},dishes:{},votes:{},state:{}},lastRaw='',polling=false,timer=null,ok=true;
-let me=null,cur=null,lastRev=null,pending=null;
+let me=null,cur=null,lastRev=null,pending=null,page='vote';
+const draft={};
 const sel={},IMG={};
 function flagsKey(){return 'ps_flags_'+cleanSession(cfg.session)+'_'+(me?me.id:'')}
 let flags={seen:{},cancel:{}};
 
-const dlist=()=>Object.entries(S.dishes).map(([id,d])=>({id,num:d.num,name:d.name,v:d.v})).sort((a,b)=>a.num-b.num);
+const dlist=()=>Object.entries(S.dishes).map(([id,d])=>({id,num:d.num,name:d.name||'',owner:d.owner||'',v:d.v})).sort((a,b)=>a.num-b.num);
 const plist=()=>Object.entries(S.participants).map(([id,p])=>({id,name:p.name})).sort((a,b)=>a.name.localeCompare(b.name));
+const myDish=()=>dlist().find(d=>d.owner===me.id);
 const myVote=d=>(S.votes[d]||{})[me.id];
 
 async function poll(){
@@ -112,6 +118,7 @@ function onData(){
  /* rileva voti cancellati dalla dashboard */
  ds.forEach(d=>{if(myVote(d.id)){flags.seen[d.id]=true}else if(flags.seen[d.id]){flags.seen[d.id]=false;flags.cancel[d.id]=true;delete sel[d.id]}});
  LS.set(flagsKey(),flags);
+ if(page==='name'&&document.activeElement&&document.activeElement.tagName==='INPUT')return;
  renderVote()}
 function enter(){
  flags=LS.get(flagsKey(),{seen:{},cancel:{}});
@@ -122,7 +129,7 @@ function logout(msg){clearInterval(timer);localStorage.removeItem('ps_me');me=nu
 /* ---------- immagini ---------- */
 function imgSrc(d){const c=IMG[d.id];if(c&&c.v===d.v)return c.data;
  if(!c||c.v!==d.v){IMG[d.id]={v:d.v,data:'',loading:true};
-  DB.get('img/'+d.id).then(r=>{IMG[d.id]={v:d.v,data:(r&&r.data)||''};if(cur===d.id)renderVote()}).catch(()=>{delete IMG[d.id]})}
+  DB.get('img/'+d.id).then(r=>{IMG[d.id]={v:d.v,data:(r&&r.data)||''};if((cur===d.id||page==='name')&&!(document.activeElement&&document.activeElement.tagName==='INPUT'))renderVote()}).catch(()=>{delete IMG[d.id]})}
  return''}
 
 /* ---------- accesso ---------- */
@@ -146,26 +153,30 @@ async function login(){
  const p={id:uid('p'),name:n};
  try{await DB.set('core/participants/'+p.id,{name:n,t:Date.now()})}catch(e){return toast('Registrazione non riuscita: '+e.message)}
  finish(p)}
-function finish(p){me={id:p.id,name:p.name,session:cleanSession(cfg.session),url:cleanUrl(cfg.url)};LS.set('ps_me',me);cur=null;lastRev=null;lastRaw='';enter()}
+function finish(p){page='vote';me={id:p.id,name:p.name,session:cleanSession(cfg.session),url:cleanUrl(cfg.url)};LS.set('ps_me',me);cur=null;lastRev=null;lastRaw='';enter()}
 
 /* ---------- schermata voto ---------- */
 function renderVote(){
  if(!me)return;
+ if(page==='name')return renderName();
  const ds=dlist(),d=ds.find(x=>x.id===cur),st=S.state||{};
  let h='<div class="top"><span>👤 <b>'+esc(me.name)+'</b> · <span id="conn">'+(DB.local()?'💾 locale':'☁️ online')+'</span></span><a id="exit">Esci</a></div>';
  if(st.view==='reveal')h+='<div class="info">📺 Si svelano gli autori: guarda lo schermo!</div>';
  else if(st.view==='final')h+='<div class="info">🏆 Classifica finale in corso: guarda lo schermo!</div>';
  if(!ds.length){$('#app').innerHTML=h+'<div class="card" style="text-align:center">⏳ In attesa dei piatti…</div>';bindExit();return}
+ h+='<button class="btn ghost" id="nameBtn">✍️ Assegna un nome al piatto</button>';
  h+='<div class="tabs">'+ds.map(x=>'<button class="tab'+(x.id===cur?' on':'')+(myVote(x.id)?' done':'')+'" data-id="'+esc(x.id)+'">'+x.num+'</button>').join('')+'</div>';
- h+='<div class="card"><span class="num">Piatto n° '+d.num+'</span><div class="name">'+esc(d.name)+'</div><img class="img" alt="" src="'+esc(imgSrc(d))+'"></div>';
+ h+='<div class="card"><span class="num">Piatto n° '+d.num+'</span>'+(d.name?'<div class="name">'+esc(d.name)+'</div>':'')+'<img class="img" alt="" src="'+esc(imgSrc(d))+'"></div>';
+ if(d.owner===me.id&&!sel[d.id])sel[d.id]=me.id;
  const v=myVote(d.id);
  if(v){h+='<div class="card done-box"><div class="big">✅ Voto confermato</div><p>Hai scelto <b>'+esc(S.participants[v]?S.participants[v].name:'(rimosso)')+(v===me.id?' (te stesso)':'')+'</b>.<br>Il voto è definitivo. Attendi il prossimo piatto!</p></div>'}
  else{
   if(flags.cancel[d.id])h+='<div class="alert">🔄 Votazione annullata: devi votare di nuovo questo piatto.</div>';
   h+='<div class="card"><h2 style="margin-top:0">Chi ha preparato questo piatto?</h2>'+
-  plist().map(p=>'<button class="opt'+(sel[d.id]===p.id?' sel':'')+'" data-p="'+esc(p.id)+'"><span class="dot"></span>'+esc(p.name)+(p.id===me.id?' (io)':'')+'</button>').join('')+
-  '<div class="hint">💡 Se il piatto è tuo, vota te stesso.</div><button class="btn" id="conf"'+(sel[d.id]?'':' disabled')+'>CONFERMA VOTO</button></div>'}
+  plist().filter(p=>!d.owner||(d.owner===me.id?p.id===me.id:p.id!==me.id)).map(p=>'<button class="opt'+(sel[d.id]===p.id?' sel':'')+'" data-p="'+esc(p.id)+'"><span class="dot"></span>'+esc(p.name)+(p.id===me.id?' (io)':'')+'</button>').join('')+
+  (d.owner===me.id?'<div class="info">Questo è il tuo piatto: puoi votare solo te stesso.</div>':'')+'<div class="hint">💡 Se il piatto è tuo, vota te stesso.</div><button class="btn" id="conf"'+(sel[d.id]?'':' disabled')+'>CONFERMA VOTO</button></div>'}
  $('#app').innerHTML=h;bindExit();
+ $('#nameBtn').onclick=()=>{page='name';renderName();window.scrollTo(0,0)};
  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{cur=b.dataset.id;renderVote();window.scrollTo(0,0)});
  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{sel[d.id]=b.dataset.p;renderVote()});
  const c=$('#conf');if(c)c.onclick=()=>confirmVote(d)}
@@ -173,12 +184,47 @@ function bindExit(){const e=$('#exit');if(e)e.onclick=async()=>{if(await ask('Us
 async function confirmVote(d){
  const t=sel[d.id];if(!t||!S.participants[t])return;
  const who=t===me.id?'te stesso (il piatto è tuo)':S.participants[t].name;
- if(!await ask('Piatto n° '+d.num+' – '+d.name+'\n\nVoti: '+who+'\n\nDopo la conferma il voto è DEFINITIVO.','Sì, conferma','Controllo ancora'))return;
+ if(!await ask('Piatto n° '+d.num+(d.name?' – '+d.name:'')+'\n\nVoti: '+who+'\n\nDopo la conferma il voto è DEFINITIVO.','Sì, conferma','Controllo ancora'))return;
  try{const done=await DB.setIfAbsent('core/votes/'+d.id+'/'+me.id,t);
   if(!done)toast('Hai già votato questo piatto');
   else{flags.seen[d.id]=true;delete flags.cancel[d.id];LS.set(flagsKey(),flags);delete sel[d.id]}
   lastRaw='';polling=false;await poll();renderVote()}
  catch(e){toast('Voto non inviato: '+e.message)}}
+
+/* ---------- assegna un nome ---------- */
+function renderName(){
+ const ds=dlist(),mine=myDish();
+ let h='<div class="top"><span>👤 <b>'+esc(me.name)+'</b></span><a id="back">← Torna alle votazioni</a></div><h2>✍️ Assegna un nome al piatto</h2>'+
+ '<div class="info">Trova il <b>tuo</b> piatto, dagli un nome e salva. Puoi nominare un solo piatto.'+(mine?'<br>Il tuo è il n° '+mine.num+'.':'')+'</div>';
+ if(!ds.length)h+='<div class="card" style="text-align:center">⏳ Nessun piatto caricato.</div>';
+ h+=ds.map(d=>{
+  const isMine=d.owner===me.id,taken=d.owner&&!isMine,open=draft.open===d.id;
+  let b='<div class="card"'+(isMine?' style="border-color:var(--ok)"':'')+'><span class="num">Piatto n° '+d.num+'</span>'+(isMine?' <span class="num" style="background:var(--ok)">il tuo</span>':'')+
+   '<img class="img" alt="" style="margin-top:.5rem;max-height:30vh" src="'+esc(imgSrc(d))+'">';
+  if(taken)b+='<div class="hint">🔒 Già assegnato: «'+esc(d.name)+'»</div>';
+  else if(open||isMine){
+   b+='<label>Nome del piatto</label><input maxlength="60" class="nin" data-id="'+esc(d.id)+'" value="'+esc(draft[d.id]!=null?draft[d.id]:d.name)+'" placeholder="Es. Lasagne della nonna"><button class="btn" data-save="'+esc(d.id)+'">💾 Salva</button>'}
+  else b+='<button class="btn ghost" data-open="'+esc(d.id)+'">È il mio piatto</button>';
+  return b+'</div>'}).join('');
+ $('#app').innerHTML=h;
+ $('#back').onclick=()=>{page='vote';renderVote()};
+ document.querySelectorAll('[data-open]').forEach(b=>b.onclick=async()=>{
+  if(myDish())return alertBox('⛔ Hai già assegnato il piatto n° '+myDish().num+'. Si può nominare un solo piatto.');
+  draft.open=b.dataset.open;renderName()});
+ document.querySelectorAll('.nin').forEach(i=>i.oninput=()=>{draft[i.dataset.id]=i.value});
+ document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>saveName(b.dataset.save))}
+async function saveName(id){
+ const d=S.dishes[id];if(!d)return;
+ const el=document.querySelector('.nin[data-id="'+id+'"]'),name=(el?el.value:'').trim().replace(/\s+/g,' ');
+ if(!name)return toast('Scrivi un nome per il piatto');
+ const mine=myDish();
+ if(mine&&mine.id!==id)return alertBox('⛔ Hai già assegnato il piatto n° '+mine.num+'. Si può nominare un solo piatto.');
+ try{
+  if(!mine){const okc=await DB.setIfAbsent('core/dishes/'+id+'/owner',me.id);
+   if(!okc){await alertBox('⛔ Questo piatto è già stato assegnato a qualcun altro.');draft.open=null;lastRaw='';polling=false;await poll();return renderName()}}
+  await DB.set('core/dishes/'+id+'/name',name);
+  delete draft[id];draft.open=null;toast('Nome salvato ✅');lastRaw='';polling=false;await poll();renderName()}
+ catch(e){toast('Salvataggio non riuscito: '+e.message)}}
 
 /* ---------- avvio ---------- */
 (function(){
