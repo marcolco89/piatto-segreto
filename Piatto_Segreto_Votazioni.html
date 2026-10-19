@@ -1,20 +1,192 @@
-<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Piatto Segreto - Votazioni</title>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Piatto Segreto – Votazioni</title>
 <style>
-:root{--ink:#173047;--gold:#f5b82e;--red:#d94b45;--green:#3a8d67;--cream:#fff9ee}*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(160deg,#fff8e8,#f0e2c9);color:var(--ink);min-height:100vh}.app{max-width:620px;margin:auto;padding:18px}.head{text-align:center;padding:16px}.logo{font-size:3.4rem}.head h1{margin:3px 0;text-transform:uppercase;letter-spacing:.06em}.card{background:#fff;border-radius:22px;padding:20px;box-shadow:0 14px 40px #5d43242d;margin-bottom:16px;border:1px solid #e2d4bc}.field{display:flex;flex-direction:column;gap:7px;margin:12px 0}input,select,button{font:inherit}input,select{padding:14px;border-radius:13px;border:1px solid #b9aa90;background:#fff}.btn{width:100%;border:0;border-radius:15px;padding:15px;font-weight:900;background:var(--gold);color:var(--ink);cursor:pointer}.btn.green{background:var(--green);color:white}.btn:disabled{opacity:.45}.dish-head{display:flex;gap:15px;align-items:center}.dish-no{font-size:3rem;font-weight:1000;color:var(--gold)}.dish-img{width:100%;max-height:280px;object-fit:cover;border-radius:17px;margin:12px 0;background:#e7dac5}.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{position:relative}.choice input{position:absolute;opacity:0}.choice label{display:block;text-align:center;padding:16px 8px;border:2px solid #dccdab;border-radius:14px;font-weight:800;background:#fff;cursor:pointer}.choice input:checked+label{background:#173047;color:white;border-color:#173047;transform:scale(1.02)}.notice{padding:13px;border-radius:13px;background:#fff1bd;border:1px solid #e7c45a;margin:12px 0}.confirmed{text-align:center;padding:25px}.confirmed .tick{font-size:4rem}.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:10px}.tab{white-space:nowrap;border:0;border-radius:99px;padding:9px 13px;background:#e4d7c1;font-weight:800}.tab.active{background:var(--ink);color:#fff}.hidden{display:none!important}.small{font-size:.85rem;color:#6e7881}.sync{text-align:center;font-size:.82rem;color:#69747e;margin:10px}
-</style></head><body><div class="app"><header class="head"><div class="logo">🎭🍝</div><h1>Piatto Segreto</h1><div>Vota dal tuo telefono</div></header>
-<div id="joinCard" class="card"><h2>Entra nella partita</h2><div class="field"><label>Codice sessione</label><input id="sessionCode" value="PIATTO2026"></div><div class="field"><label>URL Firebase (se non incluso nel link)</label><input id="dbUrl" placeholder="https://...firebasedatabase.app"></div><div class="field"><label>Il tuo nome</label><input id="myName" placeholder="Scrivi il tuo nome" maxlength="25" autocomplete="off"></div><button class="btn" onclick="joinGame()">Entra e vota</button><div class="small" style="margin-top:10px">Il nome scelto identifica il tuo voto. Usa sempre lo stesso telefono e non condividere il link con persone esterne.</div></div>
-<div id="game" class="hidden"><div id="dishTabs" class="tabs"></div><div class="card"><div class="dish-head"><div id="dishNo" class="dish-no">#1</div><div><h2 id="dishName" style="margin:0">Piatto misterioso</h2><div id="whoAmI" class="small"></div></div></div><img id="dishImage" class="dish-img"><div id="votePanel"><div id="revoteNotice" class="notice hidden" style="background:#ffe2df;border-color:#df8d86"><b>🔄 Votazione annullata!</b><br>Il voto su questo piatto non era valido (l'autore deve votare sé stesso, e solo lui). Vota di nuovo.</div><h3>Chi ha preparato questo piatto?</h3><div class="notice">Se il piatto è tuo, vota te stesso. Il sistema userà questa scelta per riconoscere l'autore, senza assegnarti il punto.</div><div id="names" class="names"></div><button id="confirmBtn" class="btn green" onclick="confirmVote()" disabled>CONFERMA VOTO</button></div><div id="confirmed" class="confirmed hidden"><div class="tick">✅</div><h2>Voto confermato</h2><p>La scelta è definitiva. Attendi il prossimo piatto.</p></div></div></div><div id="sync" class="sync">Non collegato</div></div>
+:root{--gold:#ffd166;--gold2:#f4a261;--cream:#fff4e0;--line:rgba(255,209,102,.4);--ok:#5fd68a;--bad:#ff6b6b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;color:var(--cream);font:16px "Trebuchet MS","Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 10% 0,#8a1f4a 0,transparent 50%),linear-gradient(160deg,#2a0a1b,#5b1432);background-attachment:fixed}
+h1,h2{font-family:Georgia,serif;color:var(--gold);margin:.3em 0}
+h1{font-size:2rem;text-align:center}
+#app{max-width:34rem;margin:0 auto;padding:.8rem .9rem 5rem}
+.card{background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:1.1rem;padding:1rem;margin:.8rem 0}
+label{display:block;margin:.8rem 0 .25rem;color:var(--gold);font-size:.9rem}
+input{font:inherit;width:100%;padding:.8em;border-radius:.7rem;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--cream)}
+.btn{font:inherit;font-weight:700;font-size:1.05rem;width:100%;border:0;border-radius:3rem;padding:.9em;margin:.4rem 0;cursor:pointer;color:#3a1200;background:linear-gradient(180deg,var(--gold),var(--gold2));box-shadow:0 .2rem 0 #b3651f}
+.btn:active{transform:translateY(2px)}
+.btn.ghost{background:rgba(255,255,255,.12);color:var(--cream);box-shadow:none;border:1px solid var(--line)}
+.btn[disabled]{opacity:.45}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;opacity:.9}
+.top a{color:var(--gold);text-decoration:underline;cursor:pointer}
+.tabs{display:flex;gap:.4rem;overflow-x:auto;padding:.5rem 0;position:sticky;top:0;z-index:3;background:linear-gradient(#2a0a1b,#2a0a1bdd,transparent)}
+.tab{flex:0 0 auto;min-width:2.8rem;height:2.8rem;border-radius:50%;border:2px solid var(--line);background:rgba(255,255,255,.1);color:var(--cream);font:700 1.1rem Georgia,serif;cursor:pointer}
+.tab.on{background:var(--gold);color:#3a1200;border-color:#fff}
+.tab.done::after{content:"✓";font-size:.65rem;position:relative;top:-.7em;left:.1em}
+.num{display:inline-block;background:var(--gold);color:#3a1200;font:800 1.1rem Georgia,serif;border-radius:2rem;padding:.1em .8em}
+.name{font:1.7rem Georgia,serif;margin:.3rem 0}
+.img{width:100%;max-height:48vh;object-fit:contain;border-radius:1rem;background:rgba(0,0,0,.3);border:2px solid var(--gold);min-height:6rem}
+.opt{display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;font:inherit;font-size:1.15rem;padding:.85em 1em;margin:.4rem 0;border-radius:.9rem;border:2px solid var(--line);background:rgba(255,255,255,.08);color:var(--cream);cursor:pointer}
+.opt .dot{width:1.3rem;height:1.3rem;border-radius:50%;border:2px solid var(--gold);flex:none}
+.opt.sel{background:rgba(255,209,102,.3);border-color:var(--gold);font-weight:700}
+.opt.sel .dot{background:var(--gold);box-shadow:inset 0 0 0 .2rem #5b1432}
+.hint{font-size:.95rem;color:var(--gold);margin:.5rem 0;text-align:center}
+.alert{background:rgba(255,80,80,.2);border:2px solid var(--bad);border-radius:.9rem;padding:.7rem;margin:.6rem 0;text-align:center;font-weight:700}
+.info{background:rgba(255,209,102,.18);border:1px solid var(--gold);border-radius:.9rem;padding:.7rem;margin:.6rem 0;text-align:center}
+.done-box{text-align:center;padding:1.2rem}
+.done-box .big{font-size:2.2rem;color:var(--ok);font-weight:800}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:20;padding:1rem}
+#modal.on{display:flex}
+.mbox{background:#3b0f25;border:2px solid var(--gold);border-radius:1.1rem;padding:1.2rem;width:100%;max-width:26rem;white-space:pre-line;font-size:1.1rem}
+#toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#000d;padding:.7rem 1.2rem;border-radius:2rem;display:none;z-index:30;max-width:90vw;text-align:center}
+#conn{font-size:.75rem}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="modal"></div>
+<div id="toast"></div>
 <script>
-let state={participants:[],dishes:{},votes:{},currentDish:null,phase:'setup'};let sessionCode='',dbUrl='',myName='',dishNo=null,pollTimer=null;const $=id=>document.getElementById(id);const key=s=>String(s).replace(/[.#$\[\]/]/g,'_');const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const params=new URLSearchParams(location.search);$('sessionCode').value=params.get('session')||localStorage.getItem('psv_session')||'PIATTO2026';$('dbUrl').value=params.get('db')||localStorage.getItem('psv_db')||'';
-function dbPath(path=''){return `${dbUrl.replace(/\/$/,'')}/piattoSegreto/${encodeURIComponent(sessionCode)}${path}.json`}
-async function loadState(){try{let data;if(dbUrl){const r=await fetch(dbPath());if(!r.ok)throw 0;data=await r.json()}else{const x=localStorage.getItem('ps_state_'+sessionCode);data=x&&JSON.parse(x)}if(data){state={...state,...data,participants:Array.isArray(data.participants)?data.participants.filter(Boolean):Object.values(data.participants||{}).filter(Boolean),votes:data.votes||{},dishes:data.dishes||{}};$('sync').textContent=dbUrl?'Sincronizzato online':'Modalità locale';if(myName)renderGame()}}catch(e){$('sync').textContent='Connessione non riuscita'}}
-async function registerName(n){const existing=state.participants.find(x=>x.toLowerCase()===n.toLowerCase());if(existing){if(!confirm(`Il nome "${existing}" è già registrato. Sei tu?`))return null;return existing}if(dbUrl){const r=await fetch(dbPath('/participants/'+key(n)),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)});if(!r.ok){alert('Registrazione non riuscita.');return null}}else{const x=JSON.parse(localStorage.getItem('ps_state_'+sessionCode)||'{}');let p=x.participants||{};if(Array.isArray(p))p=Object.fromEntries(p.map(v=>[key(v),v]));p[key(n)]=n;x.participants=p;localStorage.setItem('ps_state_'+sessionCode,JSON.stringify(x))}await loadState();return n}
-async function joinGame(){sessionCode=$('sessionCode').value.trim().toUpperCase();dbUrl=$('dbUrl').value.trim().replace(/\/$/,'');localStorage.setItem('psv_session',sessionCode);localStorage.setItem('psv_db',dbUrl);await loadState();const typed=$('myName').value.trim();if(!typed)return alert('Inserisci il tuo nome.');myName=await registerName(typed);if(!myName)return;localStorage.setItem('psv_name_'+sessionCode,myName);$('joinCard').classList.add('hidden');$('game').classList.remove('hidden');dishNo=state.currentDish?String(state.currentDish):String(sortedDishes()[0]?.number||'');if(!sortedDishes().length)$('sync').textContent='Registrato! In attesa che la regia carichi i piatti…';renderGame();if(pollTimer)clearInterval(pollTimer);pollTimer=setInterval(loadState,1800)}
-function sortedDishes(){return Object.values(state.dishes).sort((a,b)=>a.number-b.number)}
-function placeholder(){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500"><rect width="100%" height="100%" fill="#eadfc8"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="80">🍽️</text></svg>`)}
-function renderGame(){if(state.currentDish&&state.phase==='voting')dishNo=String(state.currentDish);const dishes=sortedDishes();$('dishTabs').innerHTML=dishes.map(d=>`<button class="tab ${String(d.number)===String(dishNo)?'active':''}" onclick="openDish('${d.number}')">#${d.number}</button>`).join('');if(!dishNo&&dishes[0])dishNo=String(dishes[0].number);const d=state.dishes[dishNo];if(!d)return;$('dishNo').textContent='#'+d.number;$('dishName').textContent=d.name;$('dishImage').src=d.image||placeholder();$('whoAmI').textContent='Stai votando come '+myName;const existing=state.votes?.[dishNo]?.[key(myName)];$('votePanel').classList.toggle('hidden',!!existing);$('revoteNotice').classList.toggle('hidden',!(state.revotes?.[dishNo]>0));$('confirmed').classList.toggle('hidden',!existing);$('names').innerHTML=state.participants.map(n=>`<div class="choice"><input type="radio" name="guess" id="n_${key(n)}" value="${esc(n)}" onchange="$('confirmBtn').disabled=false"><label for="n_${key(n)}">${esc(n)}</label></div>`).join('');$('confirmBtn').disabled=true}
-function openDish(no){dishNo=String(no);renderGame()}
-async function confirmVote(){const selected=document.querySelector('input[name=guess]:checked');if(!selected)return;if(!confirm(`Confermi che il piatto #${dishNo} è di ${selected.value}? Dopo non potrai cambiare.`))return;const path='/votes/'+dishNo+'/'+key(myName);if(dbUrl){const check=await fetch(dbPath(path));if((await check.json())!==null)return alert('Hai già votato questo piatto.');const r=await fetch(dbPath(path),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(selected.value)});if(!r.ok)return alert('Voto non salvato. Riprova.')}else{const x=JSON.parse(localStorage.getItem('ps_state_'+sessionCode)||'{}');x.votes=x.votes||{};x.votes[dishNo]=x.votes[dishNo]||{};if(x.votes[dishNo][key(myName)])return alert('Hai già votato.');x.votes[dishNo][key(myName)]=selected.value;localStorage.setItem('ps_state_'+sessionCode,JSON.stringify(x))}await loadState();renderGame()}
-(async()=>{sessionCode=$('sessionCode').value.trim().toUpperCase();dbUrl=$('dbUrl').value.trim();await loadState();const saved=localStorage.getItem('psv_name_'+sessionCode);if(saved){$('myName').value=saved}})();
-</script></body></html>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=p=>p+Math.random().toString(36).slice(2,9);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+ set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',3500)}
+function ask(msg,ok,cancel){return new Promise(res=>{const m=$('#modal');
+ m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p><button class="btn" id="mYes">'+esc(ok||'Conferma')+'</button><button class="btn ghost" id="mNo">'+esc(cancel||'Annulla')+'</button></div>';
+ m.classList.add('on');const close=v=>{m.classList.remove('on');m.innerHTML='';res(v)};
+ $('#mYes').onclick=()=>close(true);$('#mNo').onclick=()=>close(false)})}
+function cleanSession(s){return String(s||'').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'')||'serata'}
+function cleanUrl(u){u=String(u||'').trim().replace(/\/+$/,'');if(u&&!/^https?:\/\//i.test(u))u='https://'+u;return u}
+
+/* ---------- database (Firebase REST o locale) ---------- */
+let cfg={session:'',url:''};
+const DB={
+ local(){return !cfg.url},
+ root(){return cleanUrl(cfg.url)+'/piatto/'+cleanSession(cfg.session)},
+ lkey(){return 'ps_local_'+cleanSession(cfg.session)},
+ u(path){return this.root()+(path?'/'+path:'')+'.json'},
+ async get(path){
+  if(this.local()){let n=LS.get(this.lkey(),{});for(const p of path.split('/').filter(Boolean)){if(n==null||typeof n!=='object')return null;n=n[p]}return n==null?null:n}
+  const r=await fetch(this.u(path),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},
+ async set(path,val){
+  if(this.local()){const parts=path.split('/').filter(Boolean);let t=LS.get(this.lkey(),{}),n=t;
+   for(let i=0;i<parts.length-1;i++){if(n[parts[i]]==null||typeof n[parts[i]]!=='object')n[parts[i]]={};n=n[parts[i]]}
+   n[parts[parts.length-1]]=val;if(!LS.set(this.lkey(),t))throw new Error('memoria piena');return}
+  const r=await fetch(this.u(path),{method:'PUT',body:JSON.stringify(val)});if(!r.ok)throw new Error('HTTP '+r.status)},
+ /* scrive solo se la chiave non esiste ancora (anti doppio voto); true = scritto */
+ async setIfAbsent(path,val){
+  if(this.local()){if(await this.get(path)!=null)return false;await this.set(path,val);return true}
+  try{const r=await fetch(this.u(path),{method:'PUT',body:JSON.stringify(val),headers:{'if-match':'null_etag'}});
+   if(r.status===412)return false;if(!r.ok)throw new Error('HTTP '+r.status);return true}
+  catch(e){if(!(e instanceof TypeError))throw e;
+   if(await this.get(path)!=null)return false;await this.set(path,val);return true}}
+};
+
+/* ---------- stato ---------- */
+let S={participants:{},dishes:{},votes:{},state:{}},lastRaw='',polling=false,timer=null,ok=true;
+let me=null,cur=null,lastRev=null,pending=null;
+const sel={},IMG={};
+function flagsKey(){return 'ps_flags_'+cleanSession(cfg.session)+'_'+(me?me.id:'')}
+let flags={seen:{},cancel:{}};
+
+const dlist=()=>Object.entries(S.dishes).map(([id,d])=>({id,num:d.num,name:d.name,v:d.v})).sort((a,b)=>a.num-b.num);
+const plist=()=>Object.entries(S.participants).map(([id,p])=>({id,name:p.name})).sort((a,b)=>a.name.localeCompare(b.name));
+const myVote=d=>(S.votes[d]||{})[me.id];
+
+async function poll(){
+ if(polling||!me)return;polling=true;
+ try{const c=(await DB.get('core'))||{};ok=true;const raw=JSON.stringify(c);
+  if(raw!==lastRaw){lastRaw=raw;S={participants:c.participants||{},dishes:c.dishes||{},votes:c.votes||{},state:c.state||{}};onData()}}
+ catch(e){ok=false;const c=$('#conn');if(c)c.textContent='⚠️ offline'}
+ polling=false}
+function onData(){
+ if(!S.participants[me.id]){logout('Sei stato rimosso dalla serata: rientra con il tuo nome.');return}
+ const st=S.state||{};
+ if(st.rev&&st.rev!==lastRev){lastRev=st.rev;if(st.dishId&&S.dishes[st.dishId]&&(st.view==='dish'||st.view==='result'))cur=st.dishId}
+ const ds=dlist();
+ if(!cur||!S.dishes[cur])cur=ds.length?ds[0].id:null;
+ /* rileva voti cancellati dalla dashboard */
+ ds.forEach(d=>{if(myVote(d.id)){flags.seen[d.id]=true}else if(flags.seen[d.id]){flags.seen[d.id]=false;flags.cancel[d.id]=true;delete sel[d.id]}});
+ LS.set(flagsKey(),flags);
+ renderVote()}
+function enter(){
+ flags=LS.get(flagsKey(),{seen:{},cancel:{}});
+ $('#app').innerHTML='<div class="card" style="text-align:center">⏳ Collegamento in corso…</div>';
+ poll();clearInterval(timer);timer=setInterval(poll,2000)}
+function logout(msg){clearInterval(timer);localStorage.removeItem('ps_me');me=null;lastRaw='';renderLogin();if(msg)toast(msg)}
+
+/* ---------- immagini ---------- */
+function imgSrc(d){const c=IMG[d.id];if(c&&c.v===d.v)return c.data;
+ if(!c||c.v!==d.v){IMG[d.id]={v:d.v,data:'',loading:true};
+  DB.get('img/'+d.id).then(r=>{IMG[d.id]={v:d.v,data:(r&&r.data)||''};if(cur===d.id)renderVote()}).catch(()=>{delete IMG[d.id]})}
+ return''}
+
+/* ---------- accesso ---------- */
+function renderLogin(prefill){
+ const f=prefill||{};
+ $('#app').innerHTML='<h1>🍽️ Piatto Segreto</h1><div class="card"><div class="hint" style="margin-top:0">Entra nella serata</div>'+
+ '<label>Codice sessione</label><input id="fS" value="'+esc(f.session)+'" autocapitalize="off" autocomplete="off">'+
+ '<label>URL database Firebase (vuoto = prova locale)</label><input id="fU" type="url" value="'+esc(f.url)+'" autocapitalize="off" autocomplete="off">'+
+ '<label>Il tuo nome</label><input id="fN" maxlength="30" value="'+esc(f.name)+'" autocomplete="off">'+
+ '<button class="btn" id="goBtn">Entra 🎉</button></div><div id="sure"></div>';
+ $('#goBtn').onclick=login;$('#fN').onkeydown=e=>{if(e.key==='Enter')login()}}
+async function login(){
+ const s=cleanSession($('#fS').value),u=cleanUrl($('#fU').value),n=$('#fN').value.trim().replace(/\s+/g,' ');
+ if(!n)return toast('Scrivi il tuo nome');
+ cfg={session:s,url:u};LS.set('ps_vcfg',cfg);
+ let ps;try{ps=(await DB.get('core/participants'))||{}}catch(e){return toast('Impossibile collegarsi al database')}
+ const ex=Object.entries(ps).find(([id,p])=>p.name.toLowerCase()===n.toLowerCase());
+ if(ex){pending={id:ex[0],name:ex[1].name};
+  $('#sure').innerHTML='<div class="card"><div class="info">Esiste già <b>'+esc(ex[1].name)+'</b>. Sei tu?</div><button class="btn" id="yes">Sì, sono io</button><button class="btn ghost" id="no">No, scelgo un altro nome</button></div>';
+  $('#yes').onclick=()=>finish(pending);$('#no').onclick=()=>{$('#sure').innerHTML='';$('#fN').value='';$('#fN').focus()};return}
+ const p={id:uid('p'),name:n};
+ try{await DB.set('core/participants/'+p.id,{name:n,t:Date.now()})}catch(e){return toast('Registrazione non riuscita: '+e.message)}
+ finish(p)}
+function finish(p){me={id:p.id,name:p.name,session:cleanSession(cfg.session),url:cleanUrl(cfg.url)};LS.set('ps_me',me);cur=null;lastRev=null;lastRaw='';enter()}
+
+/* ---------- schermata voto ---------- */
+function renderVote(){
+ if(!me)return;
+ const ds=dlist(),d=ds.find(x=>x.id===cur),st=S.state||{};
+ let h='<div class="top"><span>👤 <b>'+esc(me.name)+'</b> · <span id="conn">'+(DB.local()?'💾 locale':'☁️ online')+'</span></span><a id="exit">Esci</a></div>';
+ if(st.view==='reveal')h+='<div class="info">📺 Si svelano gli autori: guarda lo schermo!</div>';
+ else if(st.view==='final')h+='<div class="info">🏆 Classifica finale in corso: guarda lo schermo!</div>';
+ if(!ds.length){$('#app').innerHTML=h+'<div class="card" style="text-align:center">⏳ In attesa dei piatti…</div>';bindExit();return}
+ h+='<div class="tabs">'+ds.map(x=>'<button class="tab'+(x.id===cur?' on':'')+(myVote(x.id)?' done':'')+'" data-id="'+esc(x.id)+'">'+x.num+'</button>').join('')+'</div>';
+ h+='<div class="card"><span class="num">Piatto n° '+d.num+'</span><div class="name">'+esc(d.name)+'</div><img class="img" alt="" src="'+esc(imgSrc(d))+'"></div>';
+ const v=myVote(d.id);
+ if(v){h+='<div class="card done-box"><div class="big">✅ Voto confermato</div><p>Hai scelto <b>'+esc(S.participants[v]?S.participants[v].name:'(rimosso)')+(v===me.id?' (te stesso)':'')+'</b>.<br>Il voto è definitivo. Attendi il prossimo piatto!</p></div>'}
+ else{
+  if(flags.cancel[d.id])h+='<div class="alert">🔄 Votazione annullata: devi votare di nuovo questo piatto.</div>';
+  h+='<div class="card"><h2 style="margin-top:0">Chi ha preparato questo piatto?</h2>'+
+  plist().map(p=>'<button class="opt'+(sel[d.id]===p.id?' sel':'')+'" data-p="'+esc(p.id)+'"><span class="dot"></span>'+esc(p.name)+(p.id===me.id?' (io)':'')+'</button>').join('')+
+  '<div class="hint">💡 Se il piatto è tuo, vota te stesso.</div><button class="btn" id="conf"'+(sel[d.id]?'':' disabled')+'>CONFERMA VOTO</button></div>'}
+ $('#app').innerHTML=h;bindExit();
+ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{cur=b.dataset.id;renderVote();window.scrollTo(0,0)});
+ document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{sel[d.id]=b.dataset.p;renderVote()});
+ const c=$('#conf');if(c)c.onclick=()=>confirmVote(d)}
+function bindExit(){const e=$('#exit');if(e)e.onclick=async()=>{if(await ask('Uscire da questo dispositivo? I voti già dati restano validi.','Esci'))logout()}}
+async function confirmVote(d){
+ const t=sel[d.id];if(!t||!S.participants[t])return;
+ const who=t===me.id?'te stesso (il piatto è tuo)':S.participants[t].name;
+ if(!await ask('Piatto n° '+d.num+' – '+d.name+'\n\nVoti: '+who+'\n\nDopo la conferma il voto è DEFINITIVO.','Sì, conferma','Controllo ancora'))return;
+ try{const done=await DB.setIfAbsent('core/votes/'+d.id+'/'+me.id,t);
+  if(!done)toast('Hai già votato questo piatto');
+  else{flags.seen[d.id]=true;delete flags.cancel[d.id];LS.set(flagsKey(),flags);delete sel[d.id]}
+  lastRaw='';polling=false;await poll();renderVote()}
+ catch(e){toast('Voto non inviato: '+e.message)}}
+
+/* ---------- avvio ---------- */
+(function(){
+ const p=new URLSearchParams(location.search),saved=LS.get('ps_vcfg',{session:'',url:''});
+ cfg={session:p.get('s')||saved.session||'',url:p.has('db')?p.get('db'):(p.get('s')?'':saved.url||'')};
+ const m=LS.get('ps_me',null);
+ if(m&&m.session===cleanSession(cfg.session)&&m.url===cleanUrl(cfg.url)){me=m;enter();return}
+ renderLogin({session:cfg.session,url:cfg.url,name:m?m.name:''})})();
+</script>
+</body>
+</html>
