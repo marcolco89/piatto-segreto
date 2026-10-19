@@ -50,6 +50,7 @@ label{display:block;margin:.6rem 0 .2rem;font-size:.9rem;color:var(--gold)}
 .mystery{font-size:3rem;padding:1.2rem;border:3px dashed var(--gold);border-radius:1.2rem;max-width:30rem;margin:1rem auto;background:rgba(0,0,0,.25)}
 .shake{animation:shake .12s infinite}
 @keyframes shake{25%{transform:translate(-4px,2px) rotate(-1deg)}75%{transform:translate(4px,-2px) rotate(1deg)}}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.8rem;text-align:left}.rcard{background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:1rem;padding:.7rem;animation:pop .6s}.rcard img{width:100%;height:9rem;object-fit:cover;border-radius:.7rem;margin-bottom:.4rem;background:rgba(0,0,0,.3)}.rauthor{font:1.5rem Georgia,serif;color:var(--gold);margin:.2rem 0}.rsmall{font-size:.9rem;opacity:.9}
 .author{font-size:4rem;font-family:Georgia,serif;color:var(--gold);animation:pop .6s;margin:.4rem 0}
 .frow{display:flex;align-items:center;gap:1rem;max-width:46rem;margin:.5rem auto;padding:.7rem 1.2rem;border-radius:1rem;font-size:1.7rem;text-align:left;background:rgba(255,255,255,.07);border:1px dashed var(--line);min-height:3.6rem}
 .frow .pos{font-family:Georgia,serif;font-size:2rem;width:3.4rem;color:var(--gold)}
@@ -134,10 +135,11 @@ const DB={
 /* ---------- stato ---------- */
 let S={participants:{},dishes:{},votes:{},state:{}},lastRaw='',polling=false;
 const IMG={};
-let view='home',dishId=null,revealed={},runId=0,editing=null,pendingImg=null;
+let view='home',dishId=null,revealed=false,runId=0,editing=null,pendingImg=null;
 
 function plist(){return Object.entries(S.participants).map(([id,p])=>({id,name:p.name,t:p.t||0})).sort((a,b)=>a.t-b.t)}
-function dlist(){return Object.entries(S.dishes).map(([id,d])=>({id,num:d.num,name:d.name,v:d.v})).sort((a,b)=>a.num-b.num)}
+function dlist(){return Object.entries(S.dishes).map(([id,d])=>({id,num:d.num,name:d.name||'',owner:d.owner||'',v:d.v})).sort((a,b)=>a.num-b.num)}
+const dname=d=>d.name||'(senza nome)';
 const pname=id=>S.participants[id]?S.participants[id].name:'(rimosso)';
 
 async function poll(){
@@ -190,7 +192,7 @@ function render(){
  ({home:rHome,rules:rRules,regia:rRegia,dish:rDish,result:rResult,revcheck:rRevCheck,reveal:rReveal,final:rFinal})[view]();
  hydrate()}
 function onData(){
- if((view==='dish'||view==='result'||view==='reveal')&&!S.dishes[dishId]){go('home');return}
+ if((view==='dish'||view==='result')&&!S.dishes[dishId]){go('home');return}
  if(view==='home')rHome();else if(view==='regia')rRegiaLists();else if(view==='dish')updDish();else if(view==='result')rResult();
  hydrate()}
 
@@ -213,7 +215,7 @@ function rRules(){
  '<button class="btn" data-a="home">← Indietro</button>'}
 
 /* ---------- Pagina piatto ---------- */
-function dishHead(d){return '<div><span class="num">Piatto n° '+d.num+'</span></div><img class="dishimg" data-dish="'+esc(d.id)+'" alt=""><div class="dishname">'+esc(d.name)+'</div>'}
+function dishHead(d){return '<div><span class="num">Piatto n° '+d.num+'</span></div><img class="dishimg" data-dish="'+esc(d.id)+'" alt="">'+(d.name?'<div class="dishname">'+esc(d.name)+'</div>':'')}
 function rDish(){
  const d=dlist().find(x=>x.id===dishId);if(!d){go('home');return}
  $('#app').innerHTML=dishHead(d)+'<div id="dst"></div>';updDish()}
@@ -235,7 +237,7 @@ function rResult(){
  const s=scoreDish(d.id);
  if(!s){$('#app').innerHTML='<div class="alert">Autore del piatto non ancora valido.</div><button class="btn" data-a="show" data-id="'+esc(d.id)+'">← Torna al piatto</button>';return}
  const last=idx===ds.length-1,hidden=idx>=ds.length-3;
- let h='<h2>📊 Esito – Piatto n° '+d.num+': '+esc(d.name)+'</h2><div class="big" style="font-size:2.4rem;margin:.6rem">Risposte giuste: <b style="color:var(--gold)">'+s.k+' su '+s.possible+'</b> possibili</div>';
+ let h='<h2>📊 Esito – Piatto n° '+d.num+(d.name?': '+esc(d.name):'')+'</h2><div class="big" style="font-size:2.4rem;margin:.6rem">Risposte giuste: <b style="color:var(--gold)">'+s.k+' su '+s.possible+'</b> possibili</div>';
  h+=s.k?'<div class="chips">'+s.guessers.map(g=>'<span class="chip">'+esc(pname(g))+' <b style="color:var(--gold)">+1</b></span>').join('')+'</div>':'<div class="big">🕵️ Nessuno ha indovinato!</div>';
  if(hidden)h+='<div class="hide">🤫 <b>Classifica nascosta</b><br>Siamo agli ultimi piatti: la suspense cresce!</div>';
  else{const gp=guessPoints(ds.slice(0,idx+1)),hl=new Set(s.guessers);
@@ -246,27 +248,26 @@ function rResult(){
 
 /* ---------- Rivelazione ---------- */
 function bad(){return dlist().filter(d=>analyze(d.id).status!=='ok')}
-function revStart(){const b=bad();if(b.length||!dlist().length){view='revcheck';render();return}revealed={};go('reveal',dlist()[0].id)}
+function revStart(){const b=bad();if(b.length||!dlist().length){view='revcheck';render();return}revealed=false;go('reveal')}
 function rRevCheck(){
  const b=bad();
  $('#app').innerHTML='<h2>⛔ Impossibile svelare gli autori</h2><div class="alert">'+(b.length?'Questi piatti non hanno un autore valido e vanno fatti rivotare:':'Non ci sono piatti.')+'</div>'+
- b.map(d=>{const a=analyze(d.id);return '<div class="card item"><span class="num">'+d.num+'</span><span class="grow">'+esc(d.name)+' <span class="tag bad">'+(a.status==='progress'?'voti incompleti ('+a.v+'/'+a.N+')':a.status==='none'?'nessun autore':a.selfCount+' autori')+'</span></span><button class="btn small" data-a="show" data-id="'+esc(d.id)+'">Mostra</button><button class="btn small red" data-a="revote" data-id="'+esc(d.id)+'">🔄 Rivota</button></div>'}).join('')+
+ b.map(d=>{const a=analyze(d.id);return '<div class="card item"><span class="num">'+d.num+'</span><span class="grow">'+esc(dname(d))+' <span class="tag bad">'+(a.status==='progress'?'voti incompleti ('+a.v+'/'+a.N+')':a.status==='none'?'nessun autore':a.selfCount+' autori')+'</span></span><button class="btn small" data-a="show" data-id="'+esc(d.id)+'">Mostra</button><button class="btn small red" data-a="revote" data-id="'+esc(d.id)+'">🔄 Rivota</button></div>'}).join('')+
  '<button class="btn ghost" data-a="revstart">Ricontrolla</button><button class="btn ghost" data-a="regia">⚙️ Regia</button>'}
 function rReveal(){
- const ds=dlist(),idx=ds.findIndex(x=>x.id===dishId),d=ds[idx];if(!d){go('home');return}
- const s=scoreDish(d.id);if(!s){view='revcheck';render();return}
- const last=idx===ds.length-1;
- let h=dishHead(d)+'<div id="rv">';
- if(revealed[d.id])h+=revealHtml(s);else h+='<div class="mystery" id="myst">❓ Autore misterioso ❓</div><button class="btn" id="rvBtn" data-a="reveal">🥁 Svela l\'autore</button>';
- h+='</div><div id="rvNav"'+(revealed[d.id]?'':' style="display:none"')+'>'+(last?'<button class="btn" data-a="final">🏆 Vai alla classifica</button>':'<button class="btn" data-a="revnext">➡️ Prossimo piatto</button>')+'</div>';
- $('#app').innerHTML=h}
-function revealHtml(s){
- return '<div class="author">👨‍🍳 '+esc(pname(s.author))+'</div><div class="big">Hanno indovinato: '+(s.k?s.guessers.map(g=>'<b>'+esc(pname(g))+'</b>').join(', '):'<b>nessuno!</b>')+'</div>'+
- '<div class="big" style="margin:.5rem">Punti depistaggio per l\'autore: <b style="color:var(--gold)">+'+s.authorPts+'</b></div>'}
+ $('#app').innerHTML='<h2 style="font-size:2.6rem">🔎 Chi ha cucinato cosa?</h2><div id="rv"></div><div id="rvBtnBox"><div class="mystery" id="myst">❓ Autori misteriosi ❓</div><button class="btn" id="rvBtn" data-a="reveal">🥁 Svela tutti gli autori</button></div>'+
+ '<div id="rvNav" style="display:none"><button class="btn" data-a="final">🏆 Vai alla classifica</button></div>';
+ if(revealed)showAll()}
+function showAll(){
+ $('#rv').innerHTML='<div class="rgrid">'+dlist().map(d=>{const s=scoreDish(d.id);if(!s)return'';
+  return '<div class="rcard"><img data-dish="'+esc(d.id)+'" alt=""><div><span class="num" style="font-size:1rem">n° '+d.num+'</span> <b>'+esc(dname(d))+'</b></div>'+
+  '<div class="rauthor">👨‍🍳 '+esc(pname(s.author))+'</div>'+
+  '<div class="rsmall">Indovinato da: '+(s.k?s.guessers.map(g=>esc(pname(g))).join(', '):'<b>nessuno!</b>')+'</div>'+
+  '<div class="rsmall">Depistaggio: <b style="color:var(--gold)">+'+s.authorPts+'</b></div></div>'}).join('')+'</div>';
+ $('#rvBtnBox').style.display='none';$('#rvNav').style.display='';hydrate()}
 async function doReveal(){
- const s=scoreDish(dishId);if(!s)return;const my=runId,id=dishId;
- $('#rvBtn').disabled=true;$('#myst').classList.add('shake');drum(2000);await sleep(2000);
- if(my!==runId)return;revealed[id]=true;ding();confetti(40);$('#rv').innerHTML=revealHtml(s);$('#rvNav').style.display=''}
+ const my=runId;$('#rvBtn').disabled=true;$('#myst').classList.add('shake');drum(2000);await sleep(2000);
+ if(my!==runId)return;revealed=true;ding();confetti(60);showAll()}
 
 /* ---------- Classifica finale ---------- */
 function rFinal(){
@@ -299,7 +300,7 @@ function rRegia(){
  '<label>URL pagina votazioni (per il link; lascia vuoto per usare la cartella di questa pagina)</label><input type="url" id="cV" placeholder="https://…/Piatto_Segreto_Votazioni.html" value="'+esc(cfg.votUrl)+'">'+
  '<div style="margin-top:.6rem"><button class="btn small" data-a="savecfg">💾 Salva</button><button class="btn small ghost" data-a="copylink">🔗 Copia link votanti</button></div><div id="cmsg" class="tag" style="display:none"></div></div>'+
  '<div class="card"><h3>2 · Partecipanti</h3><div class="row"><input class="grow" type="text" id="pN" maxlength="30" placeholder="Nome (per chi non ha il telefono)"><button class="btn small" data-a="addpart">➕ Aggiungi</button></div><div id="rParts"></div></div>'+
- '<div class="card"><h3>3 · Piatti</h3><div class="row"><div style="width:7rem"><label>Numero</label><input type="number" id="dN" min="1"></div><div class="grow"><label>Nome del piatto</label><input type="text" id="dT" maxlength="60"></div></div>'+
+ '<div class="card"><h3>3 · Piatti</h3><div style="width:8rem"><label>Numero</label><input type="number" id="dN" min="1"></div><div class="tag" style="margin-top:.5rem">Il nome lo assegna l&#39;autore dal cellulare ("Assegna un nome al piatto")</div>'+
  '<label>Immagine (viene ridimensionata e compressa)</label><input type="file" id="dF" accept="image/*"><img class="pv" id="dP" style="display:none" alt="">'+
  '<div style="margin-top:.6rem"><button class="btn small" data-a="savedish" id="dS">➕ Aggiungi piatto</button><button class="btn small ghost" data-a="canceledit" id="dC" style="display:none">Annulla modifica</button></div><div id="rDishes"></div></div>'+
  '<div class="card"><h3>4 · Strumenti</h3><button class="btn small ghost" data-a="resetvotes">🧹 Azzera tutti i voti</button><button class="btn small ghost" data-a="export">⬇️ Esporta backup</button><button class="btn small ghost" data-a="importbtn">⬆️ Importa backup</button><input type="file" id="iF" accept="application/json" style="display:none">'+
@@ -317,32 +318,36 @@ function rRegiaLists(){
  const ds=dlist();
  $('#rDishes').innerHTML=ds.length?ds.map(d=>{const a=analyze(d.id);
   const tag=a.status==='ok'?'<span class="tag ok">✅ '+a.v+'/'+a.N+' · autore ok</span>':a.status==='progress'?'<span class="tag">'+a.v+'/'+a.N+' voti</span>':'<span class="tag bad">⚠️ '+(a.status==='none'?'nessun autore':a.selfCount+' autori')+'</span>';
-  return '<div class="item"><img data-dish="'+esc(d.id)+'" alt=""><span class="num">'+d.num+'</span><span class="grow">'+esc(d.name)+' '+tag+'</span>'+
+  const nm=d.name&&d.owner&&S.participants[d.owner]?'<span class="tag ok">✍️ '+esc(d.name)+'</span>':'<span class="tag bad">✍️ da nominare</span>';
+  return '<div class="item"><img data-dish="'+esc(d.id)+'" alt=""><span class="num">'+d.num+'</span><span class="grow">'+nm+' '+tag+'</span>'+
   '<button class="btn small" data-a="show" data-id="'+esc(d.id)+'">Mostra</button><button class="btn small ghost" data-a="editdish" data-id="'+esc(d.id)+'">✏️</button><button class="btn small ghost" data-a="revote" data-id="'+esc(d.id)+'">🔄</button><button class="btn small ghost" data-a="deldish" data-id="'+esc(d.id)+'">🗑️</button></div>'}).join(''):'<div class="wait" style="font-size:1rem">Nessun piatto</div>'}
 
 /* ---------- azioni ---------- */
 const A={
  home(){go('home')},rules(){view='rules';render()},regia(){view='regia';render()},
- start(){if(plist().length<2)return toast('Servono almeno 2 partecipanti');const ds=dlist();if(!ds.length)return toast('Carica almeno un piatto dalla Regia');go('dish',ds[0].id)},
+ start(){if(plist().length<2)return toast('Servono almeno 2 partecipanti');const ds=dlist();if(!ds.length)return toast('Carica almeno un piatto dalla Regia');
+  const miss=ds.filter(d=>!d.name||!d.owner||!S.participants[d.owner]);
+  if(miss.length)return toast('Piatti senza nome/autore: n° '+miss.map(d=>d.num).join(', ')+'. Ognuno deve assegnare il proprio dal cellulare.');
+  go('dish',ds[0].id)},
  show(d){go('dish',d.id)},result(){go('result',dishId)},
  next(){const ds=dlist(),i=ds.findIndex(x=>x.id===dishId);if(ds[i+1])go('dish',ds[i+1].id)},
  revote(d){revote(d.id)},
  revstart(){revStart()},reveal(){doReveal()},
- revnext(){const ds=dlist(),i=ds.findIndex(x=>x.id===dishId);if(ds[i+1])go('reveal',ds[i+1].id)},
  final(){go('final')},suspense(){suspense()},
  savecfg(){saveCfg()},copylink(){copyLink()},
  async addpart(){const n=$('#pN').value.trim().replace(/\s+/g,' ');if(!n)return;
   if(plist().some(p=>p.name.toLowerCase()===n.toLowerCase()))return toast('Nome già presente');
   await W(()=>DB.set('core/participants/'+uid('p'),{name:n,t:Date.now()}));$('#pN').value=''},
  async rmpart(d){
-  if(!await ask('Rimuovere '+pname(d.id)+'? Verranno cancellati anche i voti dati da lui e quelli a suo favore (i piatti coinvolti andranno rivotati).','Rimuovi'))return;
+  if(!await ask('Rimuovere '+pname(d.id)+'? Verranno cancellati anche i voti dati da lui e quelli a suo favore; il suo piatto tornerà senza nome/autore.','Rimuovi'))return;
   W(async()=>{const v=await DB.get('core/votes')||{};
    for(const dd of Object.keys(v))for(const [voter,tgt] of Object.entries(v[dd]||{}))if(voter===d.id||tgt===d.id)await DB.del('core/votes/'+dd+'/'+voter);
+   for(const [id,x] of Object.entries(S.dishes))if(x.owner===d.id){await DB.del('core/dishes/'+id+'/owner');await DB.del('core/dishes/'+id+'/name')}
    await DB.del('core/participants/'+d.id)})},
  savedish(){saveDish()},
- editdish(d){const x=S.dishes[d.id];if(!x)return;editing=d.id;pendingImg=null;$('#dN').value=x.num;$('#dT').value=x.name;$('#dF').value='';$('#dP').style.display='none';
-  $('#dS').textContent='💾 Salva modifiche';$('#dC').style.display='';$('#dT').scrollIntoView({block:'center'})},
- canceledit(){editing=null;pendingImg=null;$('#dN').value=nextNum();$('#dT').value='';$('#dF').value='';$('#dP').style.display='none';$('#dS').textContent='➕ Aggiungi piatto';$('#dC').style.display='none'},
+ editdish(d){const x=S.dishes[d.id];if(!x)return;editing=d.id;pendingImg=null;$('#dN').value=x.num;$('#dF').value='';$('#dP').style.display='none';
+  $('#dS').textContent='💾 Salva modifiche';$('#dC').style.display='';$('#dN').scrollIntoView({block:'center'})},
+ canceledit(){editing=null;pendingImg=null;$('#dN').value=nextNum();$('#dF').value='';$('#dP').style.display='none';$('#dS').textContent='➕ Aggiungi piatto';$('#dC').style.display='none'},
  async deldish(d){if(!await ask('Eliminare il piatto n° '+(S.dishes[d.id]||{}).num+' e i suoi voti?','Elimina'))return;
   W(async()=>{await DB.del('core/votes/'+d.id);await DB.del('img/'+d.id);await DB.del('core/dishes/'+d.id)})},
  async resetvotes(){if(!await ask('Azzerare i voti di TUTTI i piatti?','Azzera'))return;W(async()=>{await DB.del('core/votes');toast('Voti azzerati')})},
@@ -361,15 +366,15 @@ async function copyLink(){
  try{await navigator.clipboard.writeText(l)}catch(e){const t=document.createElement('textarea');t.value=l;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(x){}t.remove()}
  toast('Link copiato: '+l)}
 async function saveDish(){
- const num=parseInt($('#dN').value,10),name=$('#dT').value.trim().replace(/\s+/g,' ');
+ const num=parseInt($('#dN').value,10);
  if(!(num>0))return toast('Inserisci un numero valido');
- if(!name)return toast('Inserisci il nome del piatto');
- if(dlist().some(d=>d.num===num&&d.id!==editing))return toast('Il numero '+num+' è già usato');
+  if(dlist().some(d=>d.num===num&&d.id!==editing))return toast('Il numero '+num+' è già usato');
  if(!editing&&!pendingImg)return toast('Scegli un\'immagine');
  const id=editing||uid('d');
  await W(async()=>{
   if(pendingImg)await DB.set('img/'+id,{data:pendingImg});
-  await DB.set('core/dishes/'+id,{num,name,v:pendingImg?Date.now():((S.dishes[id]||{}).v||Date.now())})});
+  await DB.set('core/dishes/'+id+'/num',num);
+  await DB.set('core/dishes/'+id+'/v',pendingImg?Date.now():((S.dishes[id]||{}).v||Date.now()))});
  A.canceledit()}
 async function exportJ(){
  try{const core=await DB.get('core'),img=await DB.get('img');
