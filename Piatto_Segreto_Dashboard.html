@@ -24,6 +24,7 @@ h2{font-size:2.2rem}h3{font-size:1.4rem}
 .btn.ghost{background:rgba(255,255,255,.12);color:var(--cream);box-shadow:none;border:1px solid var(--line)}
 .btn.red{background:linear-gradient(180deg,#ff8a8a,#d94a4a);color:#fff;box-shadow:0 .25rem 0 #8f2323}
 .btn.small{font-size:.85rem;padding:.4em 1em}
+.btn.huge{font-size:2rem;padding:.6em 2em;margin-top:2rem}
 .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
 input[type=text],input[type=number],input[type=url],input[type=file]{font:inherit;width:100%;padding:.55em .8em;border-radius:.6rem;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--cream)}
 label{display:block;margin:.6rem 0 .2rem;font-size:.9rem;color:var(--gold)}
@@ -35,6 +36,12 @@ label{display:block;margin:.6rem 0 .2rem;font-size:.9rem;color:var(--gold)}
 @keyframes pop{from{transform:scale(.3);opacity:0}}
 .wait{font-size:1.5rem;opacity:.85;animation:pulse 1.6s infinite}
 @keyframes pulse{50%{opacity:.4}}
+.stage{padding-top:8vh}
+.stage h1{font-size:6rem}
+.stage .sub{font-size:2.6rem}
+.cd{font:900 18rem Georgia,serif;color:var(--gold);text-shadow:0 .05em .3em rgba(0,0,0,.6);padding-top:10vh;animation:cdpop .9s ease-out}
+.cd.txt{font-size:7rem;padding-top:22vh}
+@keyframes cdpop{0%{transform:scale(2.4);opacity:0}40%{transform:scale(.9);opacity:1}100%{transform:scale(1)}}
 .dishimg{width:100%;max-height:58vh;object-fit:contain;border-radius:1.2rem;background:rgba(0,0,0,.3);border:3px solid var(--gold);box-shadow:0 .5rem 2rem rgba(0,0,0,.5)}
 .num{display:inline-block;background:var(--gold);color:#3a1200;font-weight:800;font-size:1.6rem;border-radius:3rem;padding:.1em .8em;font-family:Georgia,serif}
 .dishname{font-size:3rem;margin:.3rem 0;font-family:Georgia,serif;color:#fff}
@@ -86,7 +93,7 @@ label{display:block;margin:.6rem 0 .2rem;font-size:.9rem;color:var(--gold)}
 #toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:.7rem 1.4rem;border-radius:2rem;z-index:70;display:none;font-size:1rem;max-width:90vw}
 .rules li{margin:.5rem 0;font-size:1.25rem}
 .pv{max-width:12rem;max-height:9rem;border-radius:.5rem;margin-top:.4rem}
-@media(max-width:700px){html{font-size:15px}h1{font-size:2.6rem}.dishname{font-size:2rem}.frow{font-size:1.2rem}.frow.winner{font-size:1.6rem}}
+@media(max-width:700px){html{font-size:15px}h1{font-size:2.6rem}.stage h1{font-size:3rem}.stage .sub{font-size:1.5rem}.cd{font-size:9rem}.cd.txt{font-size:3rem}.dishname{font-size:2rem}.frow{font-size:1.2rem}.frow.winner{font-size:1.6rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -116,7 +123,6 @@ function cleanUrl(u){
  return u}
 
 /* ---------- impostazioni punteggio ---------- */
-const PARTNER='__partner__';           /* valore speciale del voto "piatto del mio partner" (voto nullo) */
 const DEF={guess:1,wrong:0,bonus:3,none:5,one:3,less:2,maj:1,all:0,hidden:3,partner:true};
 function SET(){
  const s=Object.assign({},DEF,(S&&S.settings)||{}),o={};
@@ -124,7 +130,7 @@ function SET(){
   if(k==='partner')o[k]=s[k]!==false;
   else{const n=Number(s[k]);o[k]=Number.isFinite(n)?Math.round(n):DEF[k]}}
  o.hidden=Math.max(0,Math.min(50,o.hidden));return o}
-const sg=n=>(n>0?'+':'')+n;  /* numero con segno */
+const sg=n=>(n>0?'+':'')+n;
 
 /* ---------- audio / coriandoli ---------- */
 let AC;function ac(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.resume)AC.resume()}catch(e){}return AC}
@@ -157,7 +163,8 @@ const DB={
 };
 
 /* ---------- stato ---------- */
-let S={participants:{},dishes:{},votes:{},state:{},settings:{}},lastRaw='',polling=false;
+const EMPTY=()=>({participants:{},dishes:{},votes:{},state:{},settings:{},phase:'prep'});
+let S=EMPTY(),lastRaw='',polling=false;
 const IMG={};
 let view='home',dishId=null,revealed=false,runId=0,editing=null,pendingImg=null;
 
@@ -165,31 +172,39 @@ function plist(){return Object.entries(S.participants).map(([id,p])=>({id,name:(
 function dlist(){return Object.entries(S.dishes).map(([id,d])=>({id,num:Number(d.num)||0,name:d.name||'',owner:d.owner||'',v:d.v})).sort((a,b)=>a.num-b.num)}
 const dname=d=>d.name||'(senza nome)';
 const pname=id=>S.participants[id]?S.participants[id].name:'(rimosso)';
+const isGame=()=>S.phase==='game';
 
 async function poll(){
  if(polling)return;polling=true;
  try{const c=(await DB.get('core'))||{};setConn(true);const raw=JSON.stringify(c);
-  if(raw!==lastRaw){lastRaw=raw;S={participants:c.participants||{},dishes:c.dishes||{},votes:c.votes||{},state:c.state||{},settings:c.settings||{}};onData()}}
+  if(raw!==lastRaw){lastRaw=raw;S={participants:c.participants||{},dishes:c.dishes||{},votes:c.votes||{},state:c.state||{},settings:c.settings||{},phase:c.phase==='game'?'game':'prep'};onData()}}
  catch(e){setConn(false)}
  polling=false}
 function setConn(ok){const e=$('#conn');e.textContent=(DB.local()?'💾 Locale · ':'☁️ Firebase · ')+cleanSession(cfg.session)+(ok?'':' · ⚠️ offline');e.style.color=ok?'':'#ffb4b4'}
 async function W(fn){try{await fn();polling=false;lastRaw='';await poll()}catch(e){toast('Errore di scrittura: '+e.message)}}
 setInterval(poll,2000);
 
-/* ---------- logica di gioco ---------- */
+/* ---------- logica di gioco ----------
+   Tutti votano (anche autore e partner), così nessuno si tradisce.
+   L'autore è quello dichiarato in preparazione: il suo voto è nullo qualunque sia.
+   Chi ha indicato il piatto come "del partner" ha voto nullo qualunque sia.
+   Votare sé stessi su un piatto non proprio = voto sbagliato. */
 function analyze(d){
  const ps=S.participants,ids=Object.keys(ps),N=ids.length,raw=S.votes[d]||{},votes={};
- ids.forEach(i=>{const t=raw[i];if(t&&(t===PARTNER||ps[t]))votes[i]=t});
- const v=Object.keys(votes).length,selfs=ids.filter(i=>votes[i]===i);
- let status='progress';if(N>=2&&v>=N)status=selfs.length===1?'ok':selfs.length===0?'none':'multi';
- return{N,v,votes,selfCount:selfs.length,status,author:status==='ok'?selfs[0]:null}}
+ ids.forEach(i=>{const t=raw[i];if(t&&ps[t])votes[i]=t});
+ const own=(S.dishes[d]||{}).owner,author=own&&ps[own]?own:null,v=Object.keys(votes).length;
+ let status='progress';
+ if(!author)status='none';
+ else if(N>=2&&v>=N)status='ok';
+ return{N,v,votes,status,author}}
 function scoreDish(d){
- const a=analyze(d);if(a.status!=='ok')return null;const st=SET();
+ const a=analyze(d);if(a.status!=='ok')return null;const st=SET(),ps=S.participants;
  const others=Object.keys(a.votes).filter(i=>i!==a.author);
- const partners=others.filter(i=>a.votes[i]===PARTNER);           /* voti nulli */
- const guessers=others.filter(i=>a.votes[i]===a.author);
- const wrongs=others.filter(i=>a.votes[i]!==a.author&&a.votes[i]!==PARTNER);
- const k=guessers.length,E=others.length-partners.length;          /* E = votanti validi */
+ const partners=st.partner?others.filter(i=>ps[i]&&ps[i].pdish===d):[];
+ const valid=others.filter(i=>!partners.includes(i));
+ const guessers=valid.filter(i=>a.votes[i]===a.author);
+ const wrongs=valid.filter(i=>a.votes[i]!==a.author);
+ const k=guessers.length,E=valid.length;
  let ap;
  if(E===0)ap=0;
  else if(k===0)ap=st.none;
@@ -198,7 +213,6 @@ function scoreDish(d){
  else if(k<E/2)ap=st.less;
  else ap=st.maj;
  return{author:a.author,guessers,wrongs,partners,k,authorPts:ap,possible:E}}
-/* punti indovino cumulati sui piatti indicati */
 function guessPoints(list){const st=SET(),m={};plist().forEach(p=>m[p.id]=0);
  list.forEach(d=>{const s=scoreDish(d.id);if(!s)return;
   s.guessers.forEach(g=>{if(g in m)m[g]+=st.guess});
@@ -212,6 +226,12 @@ function finalTotals(){
  const rows=ps.map(p=>{const b=(max>0&&G[p.id]===max)?st.bonus:0;return{id:p.id,name:p.name,a:A[p.id],g:G[p.id],gp:GP[p.id],b,tot:A[p.id]+GP[p.id]+b}});
  rows.sort((x,y)=>y.tot-x.tot||x.name.localeCompare(y.name));
  rows.forEach((r,i)=>r.pos=(i>0&&r.tot===rows[i-1].tot)?rows[i-1].pos:i+1);return rows}
+/* pronti a partire: ogni piatto ha autore+nome e ogni partecipante ha il proprio piatto */
+function readiness(){
+ const ps=plist(),ds=dlist(),okD=ds.filter(d=>d.name&&d.owner&&S.participants[d.owner]);
+ const named=new Set(okD.map(d=>d.owner));
+ const noDish=ps.filter(p=>!named.has(p.id)),miss=ds.filter(d=>!okD.includes(d));
+ return{ps,ds,named,miss,noDish,ready:ps.length>=2&&ds.length>0&&!noDish.length&&!miss.length}}
 
 /* ---------- immagini ---------- */
 async function getImg(id){const d=S.dishes[id];if(!d)return null;const c=IMG[id];if(c&&c.v===d.v)return c.data;
@@ -224,10 +244,10 @@ function resizeImg(file,max,q){return new Promise((res,rej)=>{const fr=new FileR
 /* ---------- navigazione ---------- */
 function go(v,d){
  view=v;dishId=d||null;runId++;
- if(['home','dish','result','reveal','final'].includes(v))DB.set('core/state',{view:v,dishId:dishId,rev:Date.now()}).catch(()=>{});
+ if(['home','ready','countdown','dish','result','reveal','final'].includes(v))DB.set('core/state',{view:v,dishId:dishId,rev:Date.now()}).catch(()=>{});
  render();window.scrollTo(0,0)}
 function render(){
- ({home:rHome,rules:rRules,settings:rSettings,regia:rRegia,dish:rDish,result:rResult,revcheck:rRevCheck,reveal:rReveal,final:rFinal})[view]();
+ ({home:rHome,rules:rRules,settings:rSettings,regia:rRegia,ready:rReady,countdown:rCountdown,dish:rDish,result:rResult,revcheck:rRevCheck,reveal:rReveal,final:rFinal})[view]();
  hydrate()}
 function onData(){
  if((view==='dish'||view==='result')&&!S.dishes[dishId]){go('home');return}
@@ -238,21 +258,43 @@ const LOGO='<svg class="logo" viewBox="0 0 120 120" aria-hidden="true"><circle c
 
 /* ---------- Home ---------- */
 function rHome(){
- const ps=plist();
  if(!$('#hp')){$('#app').innerHTML=LOGO+'<h1>Piatto Segreto</h1><div class="sub">Chi ha cucinato cosa? Assaggia, indovina, depista!</div><div id="hp"></div>'+
-  '<div style="margin-top:1.5rem"><button class="btn" data-a="start">🍽️ Inizia la serata</button><button class="btn ghost" data-a="rules">📖 Regole</button><button class="btn ghost" data-a="regia">⚙️ Regia</button><button class="btn ghost" data-a="settings">🎚️ Impostazioni</button></div>'}
- $('#hp').innerHTML=ps.length?'<div class="big">Ci siamo già in <b>'+ps.length+'</b>:</div><div class="chips">'+ps.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join('')+'</div>':
-  '<div class="wait">⏳ In attesa dei partecipanti… scrivi il tuo nome dalla pagina votazioni!</div>'}
+  '<div style="margin-top:1.5rem"><span id="hb"></span><button class="btn ghost" data-a="rules">📖 Regole</button><button class="btn ghost" data-a="regia">⚙️ Regia</button><button class="btn ghost" data-a="settings">🎚️ Impostazioni</button></div>'}
+ const r=readiness();let h;
+ if(!r.ps.length)h='<div class="wait">⏳ In attesa dei partecipanti… entrate dal link delle votazioni!</div>';
+ else{
+  h='<div class="big">Ci siamo già in <b>'+r.ps.length+'</b>:</div><div class="chips">'+r.ps.map(p=>'<span class="chip">'+esc(p.name)+(isGame()?'':r.named.has(p.id)?' ✅':' ✍️')+'</span>').join('')+'</div>';
+  if(isGame())h+='<div class="okmsg">🎬 Sfida in corso</div>';
+  else if(r.ready)h+='<div class="okmsg">✅ Tutti hanno scelto e nominato il proprio piatto: si può partire!</div>';
+  else h+='<div class="wait">✍️ Giocatori pronti: <b>'+(r.ps.length-r.noDish.length)+'/'+r.ps.length+'</b> · piatti con nome: <b>'+(r.ds.length-r.miss.length)+'/'+r.ds.length+'</b></div>'}
+ $('#hp').innerHTML=h;
+ $('#hb').innerHTML=isGame()?'<button class="btn" data-a="start">▶️ Riprendi la sfida</button>':'<button class="btn" data-a="start"'+(r.ready?'':' disabled')+'>🍽️ Inizia la sfida</button>'}
 function rRules(){
  const st=SET();
  $('#app').innerHTML='<h2>📖 Le regole</h2><div class="card rules"><ul>'+
- '<li>Ognuno porta di nascosto un piatto. I piatti vengono serviti uno alla volta.</li>'+
- '<li>Dal cellulare vota <b>chi ha preparato</b> ogni piatto. Se il piatto è tuo, <b>vota te stesso</b>: non dà punti, serve solo a sapere di chi è.</li>'+
- (st.partner?'<li><b>Coppie conviventi:</b> se riconosci il piatto del tuo partner scegli «💑 È il piatto del mio partner». Il voto è <b>nullo</b>: non dà punti a te e non conta per l\'autore. Si può usare una sola volta.</li>':'')+
+ '<li>Ognuno porta di nascosto un piatto. Dal cellulare ognuno <b>seleziona il proprio piatto</b> e gli dà un nome'+(st.partner?'; chi vive in coppia indica anche <b>il piatto del partner</b>':'')+'.</li>'+
+ '<li>Quando tutti sono pronti parte la sfida: i piatti vengono serviti uno alla volta e sul cellulare compare <b>solo il piatto mostrato sullo schermo</b>.</li>'+
+ '<li>Tutti votano <b>chi ha preparato</b> ogni piatto. Se il piatto è tuo'+(st.partner?' o del tuo partner':'')+', <b>vota come vuoi: il voto non conta</b>. Non farti scoprire! 🤫</li>'+
+ '<li>Votare te stesso su un piatto che non è tuo conta come voto sbagliato.</li>'+
  '<li><b>Indovino:</b> '+sg(st.guess)+' per ogni piatto attribuito alla persona giusta'+(st.wrong?', '+sg(st.wrong)+' per ogni voto sbagliato':'')+'. A fine gioco '+sg(st.bonus)+' a chi ne ha indovinati di più (pari merito: a tutti).</li>'+
  '<li><b>Autore</b> (in base a quanti indovinano il suo piatto, esclusi i voti nulli): nessuno '+sg(st.none)+' · una persona '+sg(st.one)+' · meno della metà '+sg(st.less)+' · la maggioranza (anche esattamente metà) fino a tutti tranne uno '+sg(st.maj)+' · tutti '+sg(st.all)+'.</li>'+
- '<li>Dopo il voto il piatto è definitivo. Gli autori e la classifica si scoprono solo alla fine!</li></ul></div>'+
+ '<li>Il voto è definitivo. Gli autori e la classifica si scoprono solo alla fine!</li></ul></div>'+
  '<button class="btn" data-a="home">← Indietro</button>'}
+
+/* ---------- Siamo pronti? / Countdown ---------- */
+function rReady(){
+ $('#app').innerHTML='<div class="stage">'+LOGO+'<h1>Siamo pronti?</h1><div class="sub">Il gioco sta per partire.</div><button class="btn huge" data-a="countdown">▶️ Avanti</button></div>'}
+async function rCountdown(){
+ const my=runId;
+ $('#app').innerHTML='<div id="cd" class="cd" aria-live="assertive"></div>';
+ for(const n of [3,2,1]){
+  if(my!==runId)return;const e=$('#cd');e.className='';void e.offsetWidth;e.className='cd';e.textContent=n;
+  tone(n===1?660:440,.3,'square',.2);await sleep(1000)}
+ if(my!==runId)return;
+ const e=$('#cd');e.className='';void e.offsetWidth;e.className='cd txt';e.textContent='Buon appetito! 🍽️';
+ fanfare();confetti(90);await sleep(2500);
+ if(my!==runId)return;
+ const ds=dlist();if(ds.length)go('dish',ds[0].id);else go('home')}
 
 /* ---------- Impostazioni ---------- */
 function rSettings(){
@@ -261,9 +303,9 @@ function rSettings(){
  $('#app').innerHTML='<h2>🎚️ Impostazioni punteggio</h2>'+
  '<div class="card"><h3>Indovino</h3><div class="sgrid">'+f('guess','Punti per piatto indovinato')+f('wrong','Punti per voto sbagliato (negativo = malus)')+f('bonus','Bonus miglior indovino')+'</div></div>'+
  '<div class="card"><h3>Autore (depistaggio)</h3><div class="sgrid">'+f('none','Nessuno indovina')+f('one','Indovina una sola persona')+f('less','Indovinano meno della metà')+f('maj','Metà o più, ma non tutti')+f('all','Indovinano tutti')+'</div>'+
- '<div class="note">Valori negativi = malus. Il calcolo considera solo i votanti validi (esclusi autore e voti «partner»). Se un solo votante è valido e indovina, vale «Indovinano tutti».</div></div>'+
+ '<div class="note">Valori negativi = malus. Il calcolo considera solo i votanti validi (esclusi autore e partner). Se un solo votante è valido e indovina, vale «Indovinano tutti».</div></div>'+
  '<div class="card"><h3>Gioco</h3><div class="sgrid">'+f('hidden','Ultimi piatti con classifica nascosta')+'</div>'+
- '<label class="chk"><input type="checkbox" id="s_partner"'+(st.partner?' checked':'')+'> Consenti il voto «💑 È il piatto del mio partner» (voto nullo)</label></div>'+
+ '<label class="chk"><input type="checkbox" id="s_partner"'+(st.partner?' checked':'')+'> Consenti di indicare «💑 il piatto del mio partner» (il suo voto su quel piatto è nullo)</label></div>'+
  '<div class="note">Le modifiche valgono anche per i piatti già votati: punteggi e classifiche vengono ricalcolati.</div>'+
  '<button class="btn" data-a="savesettings">💾 Salva impostazioni</button><button class="btn ghost" data-a="defsettings">↺ Valori predefiniti</button><button class="btn ghost" data-a="home">← Torna alla home</button>'}
 async function saveSettings(def){
@@ -285,22 +327,21 @@ function rDish(){
 function updDish(){
  const a=analyze(dishId),el=$('#dst');if(!el)return;
  let h='<div class="big">'+a.v+' voti su '+a.N+'</div><div class="bar"><i style="width:'+(a.N?Math.min(100,a.v/a.N*100):0)+'%"></i></div>';
- if(a.status==='progress')h+='<div class="wait">'+(a.N<2?'Servono almeno 2 partecipanti':'Votate dal cellulare…')+'</div>';
- else if(a.status==='ok')h+='<div class="okmsg">✅ Tutti hanno votato</div><button class="btn" data-a="result">📊 Esito votazione</button>';
- else if(a.status==='none')h+='<div class="alert">⚠️ Nessuno ha votato sé stesso. Chi ha preparato il piatto deve votare per sé stesso: bisogna rivotare.</div><button class="btn red" data-a="revote" data-id="'+esc(dishId)+'">🔄 Rivota questo piatto</button>';
- else h+='<div class="alert">⚠️ '+a.selfCount+' persone hanno votato sé stesse. Un piatto ha un solo autore: bisogna rivotare.</div><button class="btn red" data-a="revote" data-id="'+esc(dishId)+'">🔄 Rivota questo piatto</button>';
+ if(a.status==='none')h+='<div class="alert">⚠️ Questo piatto non ha più un autore (partecipante rimosso?). Riapri la preparazione dalla Regia.</div>';
+ else if(a.status==='progress')h+='<div class="wait">'+(a.N<2?'Servono almeno 2 partecipanti':'Votate dal cellulare…')+'</div>';
+ else h+='<div class="okmsg">✅ Tutti hanno votato</div><button class="btn" data-a="result">📊 Esito votazione</button>';
  el.innerHTML=h}
 async function revote(id){
  if(!await ask('Cancellare tutti i voti di questo piatto? I cellulari potranno rivotare.','Sì, rivota'))return;
- W(()=>DB.del('core/votes/'+id))}
+ W(()=>DB.del('core/votes/'+id));if(S.dishes[id]&&isGame())go('dish',id)}
 
 /* ---------- Esito ---------- */
 function rResult(){
  const st=SET(),ds=dlist(),idx=ds.findIndex(x=>x.id===dishId),d=ds[idx];if(!d){go('home');return}
  const s=scoreDish(d.id);
- if(!s){$('#app').innerHTML='<div class="alert">Autore del piatto non ancora valido.</div><button class="btn" data-a="show" data-id="'+esc(d.id)+'">← Torna al piatto</button>';return}
+ if(!s){$('#app').innerHTML='<div class="alert">Votazione non ancora completa.</div><button class="btn" data-a="show" data-id="'+esc(d.id)+'">← Torna al piatto</button>';return}
  const last=idx===ds.length-1,hidden=st.hidden>0&&idx>=ds.length-st.hidden;
- /* i voti «partner» NON vengono mostrati qui: rivelerebbero l'autore. Si vedono solo nello svelamento finale. */
+ /* voti nulli e numero di voti validi NON mostrati: rivelerebbero autore/partner */
  let h='<h2>📊 Esito – Piatto n° '+d.num+(d.name?': '+esc(d.name):'')+'</h2><div class="big" style="font-size:2.4rem;margin:.6rem">Risposte giuste: <b style="color:var(--gold)">'+s.k+'</b></div>';
  h+=s.k?'<div class="chips">'+s.guessers.map(g=>'<span class="chip">'+esc(pname(g))+' <b style="color:var(--gold)">'+sg(st.guess)+'</b></span>').join('')+'</div>':'<div class="big">🕵️ Nessuno ha indovinato!</div>';
  if(hidden)h+='<div class="hide">🤫 <b>Classifica nascosta</b><br>Siamo agli ultimi piatti: la suspense cresce!</div>';
@@ -315,8 +356,8 @@ function bad(){return dlist().filter(d=>analyze(d.id).status!=='ok')}
 function revStart(){const b=bad();if(b.length||!dlist().length){view='revcheck';render();return}revealed=false;go('reveal')}
 function rRevCheck(){
  const b=bad();
- $('#app').innerHTML='<h2>⛔ Impossibile svelare gli autori</h2><div class="alert">'+(b.length?'Questi piatti non hanno un autore valido e vanno fatti rivotare:':'Non ci sono piatti.')+'</div>'+
- b.map(d=>{const a=analyze(d.id);return '<div class="card item"><span class="num">'+d.num+'</span><span class="grow">'+esc(dname(d))+' <span class="tag bad">'+(a.status==='progress'?'voti incompleti ('+a.v+'/'+a.N+')':a.status==='none'?'nessun autore':a.selfCount+' autori')+'</span></span><button class="btn small" data-a="show" data-id="'+esc(d.id)+'">Mostra</button><button class="btn small red" data-a="revote" data-id="'+esc(d.id)+'">🔄 Rivota</button></div>'}).join('')+
+ $('#app').innerHTML='<h2>⛔ Impossibile svelare gli autori</h2><div class="alert">'+(b.length?'Questi piatti non hanno ancora un esito valido:':'Non ci sono piatti.')+'</div>'+
+ b.map(d=>{const a=analyze(d.id);return '<div class="card item"><span class="num">'+d.num+'</span><span class="grow">'+esc(dname(d))+' <span class="tag bad">'+(a.status==='none'?'nessun autore':'voti incompleti ('+a.v+'/'+a.N+')')+'</span></span><button class="btn small" data-a="show" data-id="'+esc(d.id)+'">Mostra</button><button class="btn small red" data-a="revote" data-id="'+esc(d.id)+'">🔄 Rivota</button></div>'}).join('')+
  '<button class="btn ghost" data-a="revstart">Ricontrolla</button><button class="btn ghost" data-a="regia">⚙️ Regia</button>'}
 function rReveal(){
  $('#app').innerHTML='<h2 style="font-size:2.6rem">🔎 Chi ha cucinato cosa?</h2><div id="rv"></div><div id="rvBtnBox"><div class="mystery" id="myst">❓ Autori misteriosi ❓</div><button class="btn" id="rvBtn" data-a="reveal">🥁 Svela tutti gli autori</button></div>'+
@@ -327,7 +368,7 @@ function showAll(){
   return '<div class="rcard"><img data-dish="'+esc(d.id)+'" alt="Foto del piatto n° '+d.num+'"><div><span class="num" style="font-size:1rem">n° '+d.num+'</span> <b>'+esc(dname(d))+'</b></div>'+
   '<div class="rauthor">👨‍🍳 '+esc(pname(s.author))+'</div>'+
   '<div class="rsmall">Indovinato da: '+(s.k?s.guessers.map(g=>esc(pname(g))).join(', '):'<b>nessuno!</b>')+'</div>'+
-  (s.partners.length?'<div class="rsmall">💑 Voto nullo (partner): '+s.partners.map(g=>esc(pname(g))).join(', ')+'</div>':'')+
+  (s.partners.length?'<div class="rsmall">💑 Partner (voto nullo): '+s.partners.map(g=>esc(pname(g))).join(', ')+'</div>':'')+
   '<div class="rsmall">Depistaggio: <b style="color:var(--gold)">'+sg(s.authorPts)+'</b></div></div>'}).join('')+'</div>';
  $('#rvBtnBox').style.display='none';$('#rvNav').style.display='';hydrate()}
 async function doReveal(){
@@ -348,8 +389,8 @@ async function suspense(){
  const rows=finalTotals(),my=++runId,ok=()=>my===runId&&view==='final',n=rows.length;
  if(!n)return;
  $('#susp').disabled=true;
- const nw=rows.filter(r=>r.pos===1).length;          /* numero di vincitori a pari merito */
- const keep=nw>1?nw:Math.min(2,n);                     /* righe da svelare alla fine */
+ const nw=rows.filter(r=>r.pos===1).length;
+ const keep=nw>1?nw:Math.min(2,n);
  for(let i=n-1;i>=keep;i--){await sleep(1800);if(!ok())return;tone(300+i*10,.3,'triangle',.25);fillRow(i,rows[i]);focusRow(i)}
  const el=document.createElement('div');el.className='banner';el.textContent=nw>1?'E i vincitori a pari merito sono...':'E il vincitore è...';$('#fl').before(el);
  await sleep(1200);if(!ok()){el.remove();return}drum(4000);await sleep(4300);if(!ok()){el.remove();return}
@@ -372,10 +413,11 @@ function rRegia(){
  '<div class="note">💾 La modalità locale funziona solo sullo stesso browser dello stesso dispositivo. Per usare PC e cellulari insieme serve Firebase.</div>'+
  '<div style="margin-top:.6rem"><button class="btn small" data-a="savecfg">💾 Salva</button><button class="btn small ghost" data-a="copylink">🔗 Copia link votanti</button></div><div id="cmsg" class="tag" style="display:none"></div></div>'+
  '<div class="card"><h3>2 · Partecipanti</h3><div class="row"><input class="grow" type="text" id="pN" maxlength="30" placeholder="Nome (per chi non ha il telefono)" aria-label="Nome partecipante"><button class="btn small" data-a="addpart">➕ Aggiungi</button></div><div id="rParts"></div></div>'+
- '<div class="card"><h3>3 · Piatti</h3><div style="width:8rem"><label for="dN">Numero</label><input type="number" id="dN" min="1"></div><div class="tag" style="margin-top:.5rem">Il nome lo assegna l\'autore dal cellulare ("Assegna un nome al piatto")</div>'+
+ '<div class="card"><h3>3 · Piatti</h3><div style="width:8rem"><label for="dN">Numero</label><input type="number" id="dN" min="1"></div><div class="tag" style="margin-top:.5rem">Autore e nome li indica ogni giocatore dal cellulare</div>'+
  '<label for="dF">Immagine (viene ridimensionata e compressa)</label><input type="file" id="dF" accept="image/*"><img class="pv" id="dP" style="display:none" alt="Anteprima">'+
  '<div style="margin-top:.6rem"><button class="btn small" data-a="savedish" id="dS">➕ Aggiungi piatto</button><button class="btn small ghost" data-a="canceledit" id="dC" style="display:none">Annulla modifica</button></div><div id="rDishes"></div></div>'+
- '<div class="card"><h3>4 · Strumenti</h3><button class="btn small ghost" data-a="settings">🎚️ Impostazioni punteggio</button><button class="btn small ghost" data-a="resetvotes">🧹 Azzera tutti i voti</button><button class="btn small ghost" data-a="export">⬇️ Esporta backup</button><button class="btn small ghost" data-a="importbtn">⬆️ Importa backup</button><input type="file" id="iF" accept="application/json" style="display:none">'+
+ '<div class="card"><h3>4 · Fase della serata</h3><div id="rPhase"></div></div>'+
+ '<div class="card"><h3>5 · Strumenti</h3><button class="btn small ghost" data-a="settings">🎚️ Impostazioni punteggio</button><button class="btn small ghost" data-a="resetvotes">🧹 Azzera tutti i voti</button><button class="btn small ghost" data-a="export">⬇️ Esporta backup</button><button class="btn small ghost" data-a="importbtn">⬆️ Importa backup</button><input type="file" id="iF" accept="application/json" style="display:none">'+
  '<div style="margin-top:.6rem"><button class="btn small" data-a="revstart">🔎 Svela autori e classifica</button></div></div>'+
  '<button class="btn" data-a="home">← Torna alla home</button>';
  $('#dF').onchange=async e=>{const f=e.target.files[0];pendingImg=null;$('#dP').style.display='none';if(!f)return;
@@ -385,12 +427,13 @@ function rRegia(){
 function nextNum(){return dlist().reduce((m,d)=>Math.max(m,d.num),0)+1}
 function rRegiaLists(){
  if(!$('#rParts'))return;
- const ps=plist();
- $('#rParts').innerHTML=ps.length?ps.map(p=>'<div class="item"><span class="grow">'+esc(p.name)+'</span><button class="btn small ghost" data-a="rmpart" data-id="'+esc(p.id)+'">🗑️ Rimuovi</button></div>').join(''):'<div class="wait" style="font-size:1rem">Nessun partecipante</div>';
- const ds=dlist();
- $('#rDishes').innerHTML=ds.length?ds.map(d=>{const a=analyze(d.id);
-  const tag=a.status==='ok'?'<span class="tag ok">✅ '+a.v+'/'+a.N+' · autore ok</span>':a.status==='progress'?'<span class="tag">'+a.v+'/'+a.N+' voti</span>':'<span class="tag bad">⚠️ '+(a.status==='none'?'nessun autore':a.selfCount+' autori')+'</span>';
-  const nm=d.name&&d.owner&&S.participants[d.owner]?'<span class="tag ok">✍️ '+esc(d.name)+'</span>':'<span class="tag bad">✍️ da nominare</span>';
+ const r=readiness();
+ $('#rPhase').innerHTML=isGame()?'<div class="note">🎬 <b>Sfida in corso</b>: i cellulari vedono solo il piatto mostrato in TV.</div><button class="btn small ghost" data-a="prep">🔓 Riapri preparazione</button>':
+  '<div class="note">✍️ <b>Preparazione</b>: giocatori pronti '+(r.ps.length-r.noDish.length)+'/'+r.ps.length+' · piatti con nome '+(r.ds.length-r.miss.length)+'/'+r.ds.length+(r.ready?' – pronti a partire ✅':'')+'</div><button class="btn small" data-a="start"'+(r.ready?'':' disabled')+'>🎬 Avvia la sfida</button>';
+ $('#rParts').innerHTML=r.ps.length?r.ps.map(p=>'<div class="item"><span class="grow">'+esc(p.name)+' '+(r.named.has(p.id)?'<span class="tag ok">✅ piatto scelto</span>':'<span class="tag bad">✍️ deve scegliere</span>')+'</span><button class="btn small ghost" data-a="rmpart" data-id="'+esc(p.id)+'">🗑️ Rimuovi</button></div>').join(''):'<div class="wait" style="font-size:1rem">Nessun partecipante</div>';
+ $('#rDishes').innerHTML=r.ds.length?r.ds.map(d=>{const a=analyze(d.id);
+  const tag=!isGame()?'':a.status==='ok'?'<span class="tag ok">✅ '+a.v+'/'+a.N+' voti</span>':a.status==='progress'?'<span class="tag">'+a.v+'/'+a.N+' voti</span>':'<span class="tag bad">⚠️ nessun autore</span>';
+  const nm=d.name&&d.owner&&S.participants[d.owner]?'<span class="tag ok">✍️ '+esc(d.name)+'</span>':'<span class="tag bad">✍️ da scegliere</span>';
   return '<div class="item"><img data-dish="'+esc(d.id)+'" alt="Piatto n° '+d.num+'"><span class="num">'+d.num+'</span><span class="grow">'+nm+' '+tag+'</span>'+
   '<button class="btn small" data-a="show" data-id="'+esc(d.id)+'">Mostra</button><button class="btn small ghost" data-a="editdish" data-id="'+esc(d.id)+'" aria-label="Modifica">✏️</button><button class="btn small ghost" data-a="revote" data-id="'+esc(d.id)+'" aria-label="Rivota">🔄</button><button class="btn small ghost" data-a="deldish" data-id="'+esc(d.id)+'" aria-label="Elimina">🗑️</button></div>'}).join(''):'<div class="wait" style="font-size:1rem">Nessun piatto</div>'}
 
@@ -399,10 +442,18 @@ const A={
  home(){go('home')},rules(){view='rules';render()},regia(){view='regia';render()},settings(){view='settings';render()},
  savesettings(){saveSettings(false)},
  async defsettings(){if(await ask('Ripristinare i punteggi predefiniti?','Ripristina'))saveSettings(true)},
- start(){if(plist().length<2)return toast('Servono almeno 2 partecipanti');const ds=dlist();if(!ds.length)return toast('Carica almeno un piatto dalla Regia');
-  const miss=ds.filter(d=>!d.name||!d.owner||!S.participants[d.owner]);
-  if(miss.length)return toast('Piatti senza nome/autore: n° '+miss.map(d=>d.num).join(', ')+'. Ognuno deve assegnare il proprio dal cellulare.');
-  go('dish',ds[0].id)},
+ async start(){
+  const r=readiness();
+  if(isGame()){const nx=r.ds.find(d=>analyze(d.id).status!=='ok')||r.ds[r.ds.length-1];if(nx)go('dish',nx.id);else go('home');return}
+  if(r.ps.length<2)return toast('Servono almeno 2 partecipanti');
+  if(!r.ds.length)return toast('Carica almeno un piatto dalla Regia');
+  if(r.noDish.length)return toast('Devono ancora scegliere il proprio piatto: '+r.noDish.map(p=>p.name).join(', '));
+  if(r.miss.length)return toast('Piatti senza autore/nome: n° '+r.miss.map(d=>d.num).join(', '));
+  if(!await ask('Avviare la sfida?\n\nTutti i dispositivi mostreranno «Siamo pronti?». Da ora i cellulari vedranno SOLO il piatto mostrato sullo schermo e le scelte non saranno più modificabili.','🎬 Avvia'))return;
+  await W(()=>DB.set('core/phase','game'));go('ready')},
+ countdown(){go('countdown')},
+ async prep(){if(!await ask('Riaprire la fase di preparazione?\n\nI cellulari torneranno alla scelta del proprio piatto. I voti già dati restano.','Riapri'))return;
+  await W(()=>DB.set('core/phase','prep'));go('home')},
  show(d){go('dish',d.id)},result(){go('result',dishId)},
  next(){const ds=dlist(),i=ds.findIndex(x=>x.id===dishId);if(ds[i+1])go('dish',ds[i+1].id)},
  revote(d){revote(d.id)},
@@ -431,7 +482,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
 
 async function saveCfg(){
  cfg.session=cleanSession($('#cS').value);cfg.url=cleanUrl($('#cU').value);cfg.votUrl=$('#cV').value.trim();
- LS.set('ps_dcfg',cfg);$('#cS').value=cfg.session;$('#cU').value=cfg.url;lastRaw='';S={participants:{},dishes:{},votes:{},state:{},settings:{}};
+ LS.set('ps_dcfg',cfg);$('#cS').value=cfg.session;$('#cU').value=cfg.url;lastRaw='';S=EMPTY();
  const m=$('#cmsg');m.style.display='inline-block';m.className='tag';m.textContent='Verifica collegamento…';
  try{await DB.get('core');m.textContent=DB.local()?'✅ Modalità locale attiva':'✅ Firebase raggiunto';m.className='tag ok'}
  catch(e){m.textContent='⚠️ Collegamento non riuscito ('+e.message+')';m.className='tag bad'}
@@ -453,7 +504,7 @@ async function saveDish(){
  A.canceledit()}
 async function exportJ(){
  try{const core=await DB.get('core'),img=await DB.get('img');
-  const blob=new Blob([JSON.stringify({app:'piatto-segreto',ver:2,session:cleanSession(cfg.session),core:core||{},img:img||{}})],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({app:'piatto-segreto',ver:5,session:cleanSession(cfg.session),core:core||{},img:img||{}})],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='piatto_segreto_'+cleanSession(cfg.session)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
  catch(e){toast('Esportazione fallita: '+e.message)}}
 async function importJ(e){

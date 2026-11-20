@@ -10,44 +10,54 @@
 body{margin:0;min-height:100vh;color:var(--cream);font:16px "Trebuchet MS","Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 10% 0,#8a1f4a 0,transparent 50%),linear-gradient(160deg,#2a0a1b,#5b1432);background-attachment:fixed}
 h1,h2{font-family:Georgia,serif;color:var(--gold);margin:.3em 0}
 h1{font-size:2rem;text-align:center}
-#app{max-width:34rem;margin:0 auto;padding:.8rem .9rem 5rem}
+#app{max-width:34rem;margin:0 auto;padding:.8rem .9rem 2rem}
 .card{background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:1.1rem;padding:1rem;margin:.8rem 0}
+.card.own{border:2px solid var(--ok);background:rgba(95,214,138,.12)}
+.card.pt{border:2px dashed var(--pink);background:rgba(255,143,177,.1)}
 label{display:block;margin:.8rem 0 .25rem;color:var(--gold);font-size:.9rem}
 input{font:inherit;width:100%;padding:.8em;border-radius:.7rem;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--cream)}
 .btn{font:inherit;font-weight:700;font-size:1.05rem;width:100%;border:0;border-radius:3rem;padding:.9em;margin:.4rem 0;cursor:pointer;color:#3a1200;background:linear-gradient(180deg,var(--gold),var(--gold2));box-shadow:0 .2rem 0 #b3651f}
 .btn:active{transform:translateY(2px)}
-.btn:focus-visible,.opt:focus-visible,.tab:focus-visible,.lnk:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.btn:focus-visible,.opt:focus-visible,.lnk:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .btn.ghost{background:rgba(255,255,255,.12);color:var(--cream);box-shadow:none;border:1px solid var(--line)}
 .btn[disabled]{opacity:.45}
 .top{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;opacity:.9}
 .lnk{color:var(--gold);text-decoration:underline;cursor:pointer;background:none;border:0;font:inherit;padding:.2rem}
-.tabs{display:flex;gap:.4rem;overflow-x:auto;padding:.5rem 0;position:sticky;top:0;z-index:3;background:linear-gradient(#2a0a1b,#2a0a1bdd,transparent)}
-.tab{flex:0 0 auto;min-width:2.8rem;height:2.8rem;border-radius:50%;border:2px solid var(--line);background:rgba(255,255,255,.1);color:var(--cream);font:700 1.1rem Georgia,serif;cursor:pointer}
-.tab.on{background:var(--gold);color:#3a1200;border-color:#fff}
-.tab.done::after{content:"✓";font-size:.65rem;position:relative;top:-.7em;left:.1em}
 .num{display:inline-block;background:var(--gold);color:#3a1200;font:800 1.1rem Georgia,serif;border-radius:2rem;padding:.1em .8em}
 .name{font:1.7rem Georgia,serif;margin:.3rem 0}
-.img{width:100%;max-height:48vh;object-fit:contain;border-radius:1rem;background:rgba(0,0,0,.3);border:2px solid var(--gold);min-height:6rem}
+.img{width:100%;max-height:48vh;object-fit:contain;border-radius:1rem;background:rgba(0,0,0,.3);border:2px solid var(--gold);min-height:6rem;display:block}
+.pimg{max-height:60vh;min-height:12rem;margin:.5rem 0}
 .opt{display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;font:inherit;font-size:1.15rem;padding:.85em 1em;margin:.4rem 0;border-radius:.9rem;border:2px solid var(--line);background:rgba(255,255,255,.08);color:var(--cream);cursor:pointer}
 .opt .dot{width:1.3rem;height:1.3rem;border-radius:50%;border:2px solid var(--gold);flex:none}
 .opt.sel{background:rgba(255,209,102,.3);border-color:var(--gold);font-weight:700}
 .opt.sel .dot{background:var(--gold);box-shadow:inset 0 0 0 .2rem #5b1432}
-.opt.partner{border-style:dashed;border-color:var(--pink);margin-top:1rem}
+.opt.mine.sel{background:rgba(95,214,138,.3);border-color:var(--ok)}
+.opt.mine.sel .dot{background:var(--ok);border-color:var(--ok)}
+.opt.partner{border-style:dashed;border-color:var(--pink)}
 .opt.partner .dot{border-color:var(--pink)}
 .opt.partner.sel{background:rgba(255,143,177,.25)}
 .opt.partner.sel .dot{background:var(--pink)}
-.opt[disabled]{opacity:.45;cursor:not-allowed}
-.sep{text-align:center;font-size:.85rem;opacity:.75;margin:.8rem 0 0}
+.opt[disabled]{opacity:.4;cursor:not-allowed}
 .hint{font-size:.95rem;color:var(--gold);margin:.5rem 0;text-align:center}
 .alert{background:rgba(255,80,80,.2);border:2px solid var(--bad);border-radius:.9rem;padding:.7rem;margin:.6rem 0;text-align:center;font-weight:700}
 .info{background:rgba(255,209,102,.18);border:1px solid var(--gold);border-radius:.9rem;padding:.7rem;margin:.6rem 0;text-align:center}
 .done-box{text-align:center;padding:1.2rem}
 .done-box .big{font-size:2.2rem;color:var(--ok);font-weight:800}
+.barbot{position:sticky;bottom:0;z-index:4;padding:1.4rem 0 .4rem;background:linear-gradient(transparent,#2a0a1b 35%)}
+.sum{text-align:center;font-size:.95rem;margin-bottom:.1rem}
+.stage{text-align:center;padding:3rem .5rem}
+.stage h1{font-size:2.6rem}
+.stage .emoji{font-size:4rem}
+.big2{font:1.5rem Georgia,serif;color:#fff;margin:.6rem 0}
+.cd{font:900 8rem Georgia,serif;color:var(--gold);text-align:center;padding:4rem 0;animation:pop .7s ease-out}
+.cd.txt{font-size:2.8rem;padding:6rem 0}
+@keyframes pop{0%{transform:scale(2);opacity:0}50%{transform:scale(.9);opacity:1}100%{transform:scale(1)}}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:20;padding:1rem}
 #modal.on{display:flex}
 .mbox{background:#3b0f25;border:2px solid var(--gold);border-radius:1.1rem;padding:1.2rem;width:100%;max-width:26rem;white-space:pre-line;font-size:1.1rem}
 #toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#000d;padding:.7rem 1.2rem;border-radius:2rem;display:none;z-index:30;max-width:90vw;text-align:center}
 #conn{font-size:.75rem}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -66,17 +76,14 @@ function ask(msg,ok,cancel){return new Promise(res=>{const m=$('#modal');
  m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p><button class="btn" id="mYes">'+esc(ok||'Conferma')+'</button><button class="btn ghost" id="mNo">'+esc(cancel||'Annulla')+'</button></div>';
  m.classList.add('on');const close=v=>{m.classList.remove('on');m.innerHTML='';res(v)};
  $('#mYes').onclick=()=>close(true);$('#mNo').onclick=()=>close(false);$('#mYes').focus()})}
+function alertBox(msg){return new Promise(res=>{const m=$('#modal');
+ m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p><button class="btn" id="mOk">OK</button></div>';m.classList.add('on');
+ $('#mOk').onclick=()=>{m.classList.remove('on');m.innerHTML='';res()};$('#mOk').focus()})}
 function cleanSession(s){return String(s||'').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'')||'serata'}
 function cleanUrl(u){
  u=String(u||'').trim().replace(/\/+$/,'');
  if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
  return u}
-function alertBox(msg){return new Promise(res=>{const m=$('#modal');
- m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p><button class="btn" id="mOk">OK</button></div>';m.classList.add('on');
- $('#mOk').onclick=()=>{m.classList.remove('on');m.innerHTML='';res()};$('#mOk').focus()})}
-
-/* valore speciale del voto "il piatto è del mio partner" (voto nullo) */
-const PARTNER='__partner__';
 
 /* ---------- database (Firebase REST o locale) ---------- */
 let cfg={session:'',url:''};
@@ -91,9 +98,10 @@ const DB={
  async set(path,val){
   if(this.local()){const parts=path.split('/').filter(Boolean);let t=LS.get(this.lkey(),{}),n=t;
    for(let i=0;i<parts.length-1;i++){if(n[parts[i]]==null||typeof n[parts[i]]!=='object')n[parts[i]]={};n=n[parts[i]]}
-   n[parts[parts.length-1]]=val;if(!LS.set(this.lkey(),t))throw new Error('memoria piena');return}
-  const r=await fetch(this.u(path),{method:'PUT',body:JSON.stringify(val)});if(!r.ok)throw new Error('HTTP '+r.status)},
- /* scrive solo se la chiave non esiste ancora (anti doppio voto); true = scritto */
+   if(val===null)delete n[parts[parts.length-1]];else n[parts[parts.length-1]]=val;
+   if(!LS.set(this.lkey(),t))throw new Error('memoria piena');return}
+  const r=await fetch(this.u(path),val===null?{method:'DELETE'}:{method:'PUT',body:JSON.stringify(val)});if(!r.ok)throw new Error('HTTP '+r.status)},
+ /* scrive solo se la chiave non esiste ancora; true = scritto */
  async setIfAbsent(path,val){
   if(this.local()){if(await this.get(path)!=null)return false;await this.set(path,val);return true}
   try{const r=await fetch(this.u(path),{method:'PUT',body:JSON.stringify(val),headers:{'if-match':'null_etag'}});
@@ -103,9 +111,10 @@ const DB={
 };
 
 /* ---------- stato ---------- */
-let S={participants:{},dishes:{},votes:{},state:{},settings:{}},lastRaw='',polling=false,timer=null,ok=true;
-let me=null,cur=null,lastRev=null,pending=null,page='vote';
-const draft={};
+let S={participants:{},dishes:{},votes:{},state:{},settings:{},phase:'prep'},lastRaw='',polling=false,timer=null;
+let me=null,cur=null,pending=null,page=null;      /* page (preparazione): intro | pick | wait */
+let draft={init:false,own:null,name:'',partner:null};
+const cd={rev:null,running:false};
 const sel={},IMG={};
 function flagsKey(){return 'ps_flags_'+cleanSession(cfg.session)+'_'+(me?me.id:'')}
 let flags={seen:{},cancel:{}};
@@ -113,30 +122,34 @@ let flags={seen:{},cancel:{}};
 const dlist=()=>Object.entries(S.dishes).map(([id,d])=>({id,num:Number(d.num)||0,name:d.name||'',owner:d.owner||'',v:d.v})).sort((a,b)=>a.num-b.num);
 const plist=()=>Object.entries(S.participants).map(([id,p])=>({id,name:(p&&p.name)||'?'})).sort((a,b)=>a.name.localeCompare(b.name));
 const myDish=()=>dlist().find(d=>d.owner===me.id);
+const myP=()=>S.participants[me.id]||{};
+const myPartnerDish=()=>{const id=myP().pdish;return id&&S.dishes[id]?dlist().find(d=>d.id===id):null};
 const myVote=d=>(S.votes[d]||{})[me.id];
 const partnerOn=()=>!S.settings||S.settings.partner!==false;
-/* piatto (diverso da quello indicato) su cui ho già usato il voto "partner" */
-const partnerUsedOn=exceptId=>dlist().find(x=>x.id!==exceptId&&myVote(x.id)===PARTNER);
+const isGame=()=>S.phase==='game';
+const typing=()=>document.activeElement&&document.activeElement.tagName==='INPUT';
+function liveDish(){const st=S.state||{};return isGame()&&(st.view==='dish'||st.view==='result')&&st.dishId&&S.dishes[st.dishId]?st.dishId:null}
+function readyCount(){const ps=plist(),own=new Set(dlist().filter(d=>d.owner&&d.name).map(d=>d.owner));return{ok:ps.filter(p=>own.has(p.id)).length,tot:ps.length}}
 
 async function poll(){
  if(polling||!me)return;polling=true;
- try{const c=(await DB.get('core'))||{};ok=true;const raw=JSON.stringify(c);
-  if(raw!==lastRaw){lastRaw=raw;S={participants:c.participants||{},dishes:c.dishes||{},votes:c.votes||{},state:c.state||{},settings:c.settings||{}};onData()}}
- catch(e){ok=false;const c=$('#conn');if(c)c.textContent='⚠️ offline'}
+ try{const c=(await DB.get('core'))||{};const raw=JSON.stringify(c);
+  if(raw!==lastRaw){lastRaw=raw;S={participants:c.participants||{},dishes:c.dishes||{},votes:c.votes||{},state:c.state||{},settings:c.settings||{},phase:c.phase==='game'?'game':'prep'};onData()}}
+ catch(e){const c=$('#conn');if(c)c.textContent='⚠️ offline'}
  polling=false}
 function onData(){
  if(!S.participants[me.id]){logout('Sei stato rimosso dalla serata: rientra con il tuo nome.');return}
- const st=S.state||{};
- if(st.rev&&st.rev!==lastRev){lastRev=st.rev;if(st.dishId&&S.dishes[st.dishId]&&(st.view==='dish'||st.view==='result'))cur=st.dishId}
- const ds=dlist();
- if(!cur||!S.dishes[cur])cur=ds.length?ds[0].id:null;
+ cur=liveDish();
  /* rileva voti cancellati dalla dashboard */
- ds.forEach(d=>{if(myVote(d.id)){flags.seen[d.id]=true}else if(flags.seen[d.id]){flags.seen[d.id]=false;flags.cancel[d.id]=true;delete sel[d.id]}});
+ dlist().forEach(d=>{if(myVote(d.id)){flags.seen[d.id]=true}else if(flags.seen[d.id]){flags.seen[d.id]=false;flags.cancel[d.id]=true;delete sel[d.id]}});
  LS.set(flagsKey(),flags);
- if(page==='name'&&document.activeElement&&document.activeElement.tagName==='INPUT')return;
- renderVote()}
+ const st=S.state||{};
+ if(isGame()&&st.view==='countdown'&&st.rev!==cd.rev){cd.rev=st.rev;runCountdown();return}
+ if(cd.running)return;
+ if(!isGame()&&typing())return;
+ render()}
 function enter(){
- flags=LS.get(flagsKey(),{seen:{},cancel:{}});
+ flags=LS.get(flagsKey(),{seen:{},cancel:{}});page=null;draft={init:false,own:null,name:'',partner:null};
  $('#app').innerHTML='<div class="card" style="text-align:center">⏳ Collegamento in corso…</div>';
  polling=false;poll();clearInterval(timer);timer=setInterval(poll,2000)}
 function logout(msg){clearInterval(timer);localStorage.removeItem('ps_me');me=null;lastRaw='';renderLogin({session:cfg.session,url:cfg.url});if(msg)toast(msg)}
@@ -144,7 +157,7 @@ function logout(msg){clearInterval(timer);localStorage.removeItem('ps_me');me=nu
 /* ---------- immagini ---------- */
 function imgSrc(d){const c=IMG[d.id];if(c&&c.v===d.v)return c.data;
  IMG[d.id]={v:d.v,data:'',loading:true};
- DB.get('img/'+d.id).then(r=>{IMG[d.id]={v:d.v,data:(r&&r.data)||''};if((cur===d.id||page==='name')&&!(document.activeElement&&document.activeElement.tagName==='INPUT'))renderVote()}).catch(()=>{delete IMG[d.id]});
+ DB.get('img/'+d.id).then(r=>{IMG[d.id]={v:d.v,data:(r&&r.data)||''};if(!cd.running&&!typing())render()}).catch(()=>{delete IMG[d.id]});
  return''}
 
 /* ---------- accesso ---------- */
@@ -168,97 +181,142 @@ async function login(){
  const p={id:uid('p'),name:n};
  try{await DB.set('core/participants/'+p.id,{name:n,t:Date.now()})}catch(e){return toast('Registrazione non riuscita: '+e.message)}
  finish(p)}
-function finish(p){page='vote';me={id:p.id,name:p.name,session:cleanSession(cfg.session),url:cleanUrl(cfg.url)};LS.set('ps_me',me);cur=null;lastRev=null;lastRaw='';enter()}
+function finish(p){me={id:p.id,name:p.name,session:cleanSession(cfg.session),url:cleanUrl(cfg.url)};LS.set('ps_me',me);cur=null;lastRaw='';enter()}
 
-/* ---------- schermata voto ---------- */
-function voteLabel(v){
- if(v===PARTNER)return '💑 piatto del tuo partner (voto nullo)';
- return (S.participants[v]?S.participants[v].name:'(rimosso)')+(v===me.id?' (te stesso)':'')}
-function renderVote(){
+/* ---------- router ---------- */
+function header(){return '<div class="top"><span>👤 <b>'+esc(me.name)+'</b> · <span id="conn">'+(DB.local()?'💾 locale':'☁️ online')+'</span></span><button class="lnk" id="exit">Esci</button></div>'}
+function bindExit(){const e=$('#exit');if(e)e.onclick=async()=>{if(await ask('Uscire da questo dispositivo? Le tue scelte e i voti già dati restano validi.','Esci'))logout()}}
+function render(){
  if(!me)return;
- if(page==='name')return renderName();
- const ds=dlist(),d=ds.find(x=>x.id===cur),st=S.state||{};
- let h='<div class="top"><span>👤 <b>'+esc(me.name)+'</b> · <span id="conn">'+(DB.local()?'💾 locale':'☁️ online')+'</span></span><button class="lnk" id="exit">Esci</button></div>';
- if(st.view==='reveal')h+='<div class="info">📺 Si svelano gli autori: guarda lo schermo!</div>';
- else if(st.view==='final')h+='<div class="info">🏆 Classifica finale in corso: guarda lo schermo!</div>';
- if(!ds.length||!d){$('#app').innerHTML=h+'<div class="card" style="text-align:center">⏳ In attesa dei piatti…</div>';bindExit();return}
- h+='<button class="btn ghost" id="nameBtn">✍️ Assegna un nome al piatto</button>';
- h+='<div class="tabs">'+ds.map(x=>'<button class="tab'+(x.id===cur?' on':'')+(myVote(x.id)?' done':'')+'" data-id="'+esc(x.id)+'" aria-label="Piatto '+x.num+'">'+x.num+'</button>').join('')+'</div>';
+ if(isGame())return renderGame();
+ const m=myDish();
+ if(!page)page=m&&m.name?'wait':'intro';
+ if(page==='wait'&&!(m&&m.name))page='intro';
+ if(page==='intro')return renderIntro();
+ if(page==='pick')return renderPick();
+ return renderWait()}
+
+/* ---------- 1 · Introduzione ---------- */
+function renderIntro(){
+ const n=dlist().length;
+ $('#app').innerHTML=header()+'<h1>🍽️ Piatto Segreto</h1><div class="card" style="text-align:center">'+
+  '<div class="big2">Seleziona il tuo piatto'+(partnerOn()?' e, se presente, anche quello del tuo partner.':'.')+'</div>'+
+  '<p>Poi dai un nome al tuo piatto e premi <b>Conferma</b>.</p>'+
+  (n?'<button class="btn" id="goPick">Ho capito, avanti ➡️</button>':'<div class="info">⏳ L\'organizzatore sta caricando i piatti…</div>')+'</div>';
+ bindExit();
+ const g=$('#goPick');if(g)g.onclick=()=>{page='pick';draft.init=false;render();window.scrollTo(0,0)}}
+
+/* ---------- 2 · Scelta piatti ---------- */
+function renderPick(){
+ const ds=dlist(),pOn=partnerOn();
+ if(!draft.init){const m=myDish(),pd=myPartnerDish();draft={init:true,own:m?m.id:null,name:m?m.name:'',partner:pOn&&pd?pd.id:null}}
+ if(draft.own&&!S.dishes[draft.own])draft.own=null;
+ if(draft.partner&&(!S.dishes[draft.partner]||!pOn))draft.partner=null;
+ let h=header()+'<h2>Seleziona i piatti</h2><div class="info">Tocca <b>«È il mio piatto»</b> sotto il tuo e dagli un nome.'+(pOn?'<br>Se il tuo partner ha cucinato, tocca <b>«È il piatto del mio partner»</b> sotto il suo.':'')+'</div>';
+ if(!ds.length)h+='<div class="card" style="text-align:center">⏳ Nessun piatto caricato.</div>';
+ h+=ds.map(d=>{
+  const isOwn=draft.own===d.id,isP=draft.partner===d.id,taken=d.owner&&d.owner!==me.id;
+  let b='<div class="card'+(isOwn?' own':isP?' pt':'')+'"><span class="num">Piatto n° '+d.num+'</span>'+
+   '<img class="img pimg" alt="Foto del piatto n° '+d.num+'" src="'+esc(imgSrc(d))+'">';
+  if(taken&&!isOwn)b+='<div class="hint">🔒 Già scelto da un altro giocatore</div>';
+  else b+='<button class="opt mine'+(isOwn?' sel':'')+'" data-own="'+esc(d.id)+'" aria-pressed="'+isOwn+'"><span class="dot"></span>🍳 È il mio piatto</button>';
+  if(isOwn)b+='<label for="nin">Nome del tuo piatto</label><input id="nin" maxlength="60" value="'+esc(draft.name)+'" placeholder="Es. Lasagne della nonna" autocomplete="off">';
+  if(pOn)b+='<button class="opt partner'+(isP?' sel':'')+'" data-partner="'+esc(d.id)+'" aria-pressed="'+isP+'"'+(isOwn?' disabled':'')+'><span class="dot"></span>💑 È il piatto del mio partner</button>';
+  return b+'</div>'}).join('');
+ h+='<div class="barbot"><div class="sum" id="sum" aria-live="polite"></div><button class="btn" id="okBtn" disabled>✅ Conferma</button>'+
+  (myDish()?'<button class="btn ghost" id="cancelPick">Annulla modifiche</button>':'')+'</div>';
+ $('#app').innerHTML=h;bindExit();
+ document.querySelectorAll('[data-own]').forEach(b=>b.onclick=()=>{
+  const id=b.dataset.own;draft.own=draft.own===id?null:id;
+  if(draft.own&&draft.partner===draft.own)draft.partner=null;
+  renderPick();const i=$('#nin');if(i)i.focus({preventScroll:true})});
+ document.querySelectorAll('[data-partner]').forEach(b=>b.onclick=()=>{
+  if(b.disabled)return;const id=b.dataset.partner;if(id===draft.own)return;
+  draft.partner=draft.partner===id?null:id;renderPick()});
+ const i=$('#nin');if(i){i.oninput=()=>{draft.name=i.value;updBar()};i.onkeydown=e=>{if(e.key==='Enter')i.blur()}}
+ $('#okBtn').onclick=savePick;
+ const c=$('#cancelPick');if(c)c.onclick=()=>{draft.init=false;page='wait';render()};
+ updBar()}
+function updBar(){
+ const ds=dlist(),o=ds.find(d=>d.id===draft.own),p=ds.find(d=>d.id===draft.partner),nm=draft.name.trim();
+ let t;
+ if(!o)t='⚠️ Seleziona il tuo piatto';
+ else if(!nm)t='✍️ Dai un nome al tuo piatto (n° '+o.num+')';
+ else t='🍳 Mio: n° '+o.num+' «'+esc(nm)+'»'+(partnerOn()?' · 💑 Partner: '+(p?'n° '+p.num:'nessuno'):'');
+ $('#sum').innerHTML=t;$('#okBtn').disabled=!(o&&nm)}
+async function savePick(){
+ const own=draft.own,name=draft.name.trim().replace(/\s+/g,' '),partner=partnerOn()?draft.partner:null;
+ if(!own||!S.dishes[own])return alertBox('⛔ Devi selezionare il tuo piatto.');
+ if(!name)return alertBox('⛔ Dai un nome al tuo piatto.');
+ if(partner&&partner===own)return alertBox('⛔ Il tuo piatto e quello del partner non possono essere lo stesso.');
+ const o=dlist().find(d=>d.id===own),p=partner?dlist().find(d=>d.id===partner):null;
+ if(!await ask('Il tuo piatto: n° '+o.num+' «'+name+'»'+(partnerOn()?'\nPiatto del partner: '+(p?'n° '+p.num:'nessuno'):'')+'\n\nConfermi?','Sì, conferma','Controllo ancora'))return;
+ try{
+  lastRaw='';polling=false;await poll();
+  if(isGame())return alertBox('⛔ La sfida è già iniziata: le scelte non sono più modificabili.');
+  const mine=myDish();
+  if(!mine||mine.id!==own){
+   const okc=await DB.setIfAbsent('core/dishes/'+own+'/owner',me.id);
+   if(!okc){draft.own=null;lastRaw='';polling=false;await poll();return alertBox('⛔ Questo piatto è appena stato scelto da un altro giocatore. Controlla di aver selezionato quello giusto.')}
+   if(mine){await DB.set('core/dishes/'+mine.id+'/name',null);await DB.set('core/dishes/'+mine.id+'/owner',null)}}
+  await DB.set('core/dishes/'+own+'/name',name);
+  await DB.set('core/participants/'+me.id+'/pdish',partner||null);
+  toast('Scelte salvate ✅');page='wait';draft.init=false;lastRaw='';polling=false;await poll();render();window.scrollTo(0,0)}
+ catch(e){toast('Salvataggio non riuscito: '+e.message)}}
+
+/* ---------- 3 · Attesa avvio ---------- */
+function renderWait(){
+ const m=myDish(),p=partnerOn()?myPartnerDish():null,rc=readyCount();
+ $('#app').innerHTML=header()+'<div class="card done-box"><div class="big">✅ Fatto!</div>'+
+  '<p>Il tuo piatto: <b>n° '+m.num+' «'+esc(m.name)+'»</b></p>'+
+  (partnerOn()?'<p>Piatto del partner: <b>'+(p?'n° '+p.num:'nessuno')+'</b></p>':'')+'</div>'+
+  '<div class="info">⏳ Attendi che l\'organizzatore avvii il gioco.<br>Giocatori pronti: <b>'+rc.ok+'/'+rc.tot+'</b></div>'+
+  '<div class="hint">🤫 Durante il gioco vota normalmente anche sul tuo piatto'+(partnerOn()?' e su quello del partner':'')+': quel voto non conta, serve solo a non farti scoprire!</div>'+
+  '<button class="btn ghost" id="edit">✏️ Modifica le mie scelte</button>';
+ bindExit();$('#edit').onclick=()=>{page='pick';draft.init=false;render();window.scrollTo(0,0)}}
+
+/* ---------- Gara ----------
+   Schermata IDENTICA per tutti (autore e partner compresi): chi sbircia non nota differenze.
+   Il voto dell'autore e del partner viene annullato dalla dashboard in fase di calcolo. */
+function runCountdown(){
+ cd.running=true;let i=0;const seq=['3','2','1','Buon appetito! 🍽️'];
+ const step=()=>{
+  if(!me||!isGame()){cd.running=false;return render()}
+  if(i<seq.length){$('#app').innerHTML='<div class="cd'+(i===3?' txt':'')+'" aria-live="assertive">'+seq[i]+'</div>';i++;setTimeout(step,i===4?2200:1000)}
+  else{cd.running=false;render()}};
+ step()}
+const voteLabel=v=>(S.participants[v]?S.participants[v].name:'(rimosso)')+(v===me.id?' (te stesso)':'');
+function renderGame(){
+ const st=S.state||{},id=liveDish(),d=id?dlist().find(x=>x.id===id):null;
+ let h=header();
+ if(!d){
+  if(st.view==='ready')h+='<div class="stage"><div class="emoji">🍽️</div><h1>Siamo pronti?</h1><div class="big2">Il gioco sta per partire.</div></div>';
+  else if(st.view==='countdown')h+='<div class="cd txt">Buon appetito! 🍽️</div>';
+  else{const msg=st.view==='reveal'?'📺 Si svelano gli autori: guarda lo schermo!':st.view==='final'?'🏆 Classifica finale in corso: guarda lo schermo!':'⏳ Attendi: il prossimo piatto comparirà qui quando sarà mostrato sullo schermo.';
+   h+='<div class="card" style="text-align:center;font-size:1.2rem">'+msg+'</div>'}
+  $('#app').innerHTML=h;bindExit();return}
  h+='<div class="card"><span class="num">Piatto n° '+d.num+'</span>'+(d.name?'<div class="name">'+esc(d.name)+'</div>':'')+'<img class="img" alt="Foto del piatto n° '+d.num+'" src="'+esc(imgSrc(d))+'"></div>';
- const isMine=d.owner===me.id;
- if(isMine&&!sel[d.id])sel[d.id]=me.id;
  const v=myVote(d.id);
- if(v){h+='<div class="card done-box"><div class="big">✅ Voto confermato</div><p>Hai scelto <b>'+esc(voteLabel(v))+'</b>.<br>Il voto è definitivo. Attendi il prossimo piatto!</p></div>'}
+ if(v)h+='<div class="card done-box"><div class="big">✅ Voto confermato</div><p>Hai scelto <b>'+esc(voteLabel(v))+'</b>.<br>Il voto è definitivo. Attendi il prossimo piatto!</p></div>';
+ else if(st.view==='result')h+='<div class="info">⏱️ La votazione di questo piatto è chiusa.</div>';
  else{
   if(flags.cancel[d.id])h+='<div class="alert">🔄 Votazione annullata: devi votare di nuovo questo piatto.</div>';
   h+='<div class="card"><h2 style="margin-top:0">Chi ha preparato questo piatto?</h2>'+
-  plist().filter(p=>!d.owner||(isMine?p.id===me.id:p.id!==me.id)).map(p=>'<button class="opt'+(sel[d.id]===p.id?' sel':'')+'" data-p="'+esc(p.id)+'"><span class="dot"></span>'+esc(p.name)+(p.id===me.id?' (io)':'')+'</button>').join('');
-  /* opzione partner: non sul proprio piatto, solo se abilitata e non già usata su un altro piatto */
-  if(!isMine&&partnerOn()){
-   const used=partnerUsedOn(d.id);
-   if(used&&sel[d.id]===PARTNER)delete sel[d.id];
-   h+='<div class="sep">— oppure —</div><button class="opt partner'+(sel[d.id]===PARTNER?' sel':'')+'" data-p="'+PARTNER+'"'+(used?' disabled':'')+'><span class="dot"></span>💑 È il piatto del mio partner (voto nullo)</button>'+
-   (used?'<div class="hint">Hai già usato questa opzione sul piatto n° '+used.num+'.</div>':'')}
-  h+=(isMine?'<div class="info">Questo è il tuo piatto: puoi votare solo te stesso.</div>':'')+
-  '<div class="hint">💡 Se il piatto è tuo, vota te stesso.'+(partnerOn()&&!isMine?'<br>💑 Se lo ha cucinato chi vive con te, scegli «piatto del mio partner».':'')+'</div>'+
+  plist().map(p=>'<button class="opt'+(sel[d.id]===p.id?' sel':'')+'" data-p="'+esc(p.id)+'" aria-pressed="'+(sel[d.id]===p.id)+'"><span class="dot"></span>'+esc(p.name)+(p.id===me.id?' (io)':'')+'</button>').join('')+
   '<button class="btn" id="conf"'+(sel[d.id]?'':' disabled')+'>CONFERMA VOTO</button></div>'}
  $('#app').innerHTML=h;bindExit();
- $('#nameBtn').onclick=()=>{page='name';renderName();window.scrollTo(0,0)};
- document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{cur=b.dataset.id;renderVote();window.scrollTo(0,0)});
- document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(b.disabled)return;sel[d.id]=b.dataset.p;renderVote()});
+ document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{sel[d.id]=b.dataset.p;render()});
  const c=$('#conf');if(c)c.onclick=()=>confirmVote(d)}
-function bindExit(){const e=$('#exit');if(e)e.onclick=async()=>{if(await ask('Uscire da questo dispositivo? I voti già dati restano validi.','Esci'))logout()}}
 async function confirmVote(d){
- const t=sel[d.id];if(!t)return;
- if(t===PARTNER){
-  if(!partnerOn())return toast('Opzione «partner» disattivata dall\'organizzatore');
-  if(d.owner===me.id)return toast('Non puoi usare questa opzione sul tuo piatto');
-  const used=partnerUsedOn(d.id);if(used)return toast('Hai già usato questa opzione sul piatto n° '+used.num);
- }else if(!S.participants[t])return;
- const msg=t===PARTNER
-  ?'Piatto n° '+d.num+(d.name?' – '+d.name:'')+'\n\nDichiari che è il piatto del tuo PARTNER.\nIl voto sarà NULLO: nessun punto per te e non conta per l\'autore.\nPuoi usare questa opzione una sola volta.\n\nDopo la conferma il voto è DEFINITIVO.'
-  :'Piatto n° '+d.num+(d.name?' – '+d.name:'')+'\n\nVoti: '+(t===me.id?'te stesso (il piatto è tuo)':S.participants[t].name)+'\n\nDopo la conferma il voto è DEFINITIVO.';
- if(!await ask(msg,'Sì, conferma','Controllo ancora'))return;
+ const t=sel[d.id];if(!t||!S.participants[t])return;
+ if(!await ask('Piatto n° '+d.num+(d.name?' – '+d.name:'')+'\n\nVoti: '+voteLabel(t)+'\n\nDopo la conferma il voto è DEFINITIVO.','Sì, conferma','Controllo ancora'))return;
+ lastRaw='';polling=false;await poll();
+ if(liveDish()!==d.id||(S.state||{}).view!=='dish'){toast('⛔ Questo piatto non è più in votazione');return render()}
  try{const done=await DB.setIfAbsent('core/votes/'+d.id+'/'+me.id,t);
   if(!done)toast('Hai già votato questo piatto');
   else{flags.seen[d.id]=true;delete flags.cancel[d.id];LS.set(flagsKey(),flags);delete sel[d.id]}
-  lastRaw='';polling=false;await poll();renderVote()}
+  lastRaw='';polling=false;await poll();render()}
  catch(e){toast('Voto non inviato: '+e.message)}}
-
-/* ---------- assegna un nome ---------- */
-function renderName(){
- const ds=dlist(),mine=myDish();
- let h='<div class="top"><span>👤 <b>'+esc(me.name)+'</b></span><button class="lnk" id="back">← Torna alle votazioni</button></div><h2>✍️ Assegna un nome al piatto</h2>'+
- '<div class="info">Trova il <b>tuo</b> piatto, dagli un nome e salva. Puoi nominare un solo piatto.'+(mine?'<br>Il tuo è il n° '+mine.num+'.':'')+'</div>';
- if(!ds.length)h+='<div class="card" style="text-align:center">⏳ Nessun piatto caricato.</div>';
- h+=ds.map(d=>{
-  const isMine=d.owner===me.id,taken=d.owner&&!isMine,open=draft.open===d.id;
-  let b='<div class="card"'+(isMine?' style="border-color:var(--ok)"':'')+'><span class="num">Piatto n° '+d.num+'</span>'+(isMine?' <span class="num" style="background:var(--ok)">il tuo</span>':'')+
-   '<img class="img" alt="Foto del piatto n° '+d.num+'" style="margin-top:.5rem;max-height:30vh" src="'+esc(imgSrc(d))+'">';
-  if(taken)b+='<div class="hint">🔒 Già assegnato: «'+esc(d.name)+'»</div>';
-  else if(open||isMine){
-   b+='<label>Nome del piatto</label><input maxlength="60" class="nin" data-id="'+esc(d.id)+'" value="'+esc(draft[d.id]!=null?draft[d.id]:d.name)+'" placeholder="Es. Lasagne della nonna"><button class="btn" data-save="'+esc(d.id)+'">💾 Salva</button>'}
-  else b+='<button class="btn ghost" data-open="'+esc(d.id)+'">È il mio piatto</button>';
-  return b+'</div>'}).join('');
- $('#app').innerHTML=h;
- $('#back').onclick=()=>{page='vote';renderVote()};
- document.querySelectorAll('[data-open]').forEach(b=>b.onclick=async()=>{
-  if(myDish())return alertBox('⛔ Hai già assegnato il piatto n° '+myDish().num+'. Si può nominare un solo piatto.');
-  draft.open=b.dataset.open;renderName()});
- document.querySelectorAll('.nin').forEach(i=>i.oninput=()=>{draft[i.dataset.id]=i.value});
- document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>saveName(b.dataset.save))}
-async function saveName(id){
- const d=S.dishes[id];if(!d)return;
- const el=document.querySelector('.nin[data-id="'+id+'"]'),name=(el?el.value:'').trim().replace(/\s+/g,' ');
- if(!name)return toast('Scrivi un nome per il piatto');
- const mine=myDish();
- if(mine&&mine.id!==id)return alertBox('⛔ Hai già assegnato il piatto n° '+mine.num+'. Si può nominare un solo piatto.');
- try{
-  if(!mine){const okc=await DB.setIfAbsent('core/dishes/'+id+'/owner',me.id);
-   if(!okc){await alertBox('⛔ Questo piatto è già stato assegnato a qualcun altro.');draft.open=null;lastRaw='';polling=false;await poll();return renderName()}}
-  await DB.set('core/dishes/'+id+'/name',name);
-  delete draft[id];draft.open=null;toast('Nome salvato ✅');lastRaw='';polling=false;await poll();renderName()}
- catch(e){toast('Salvataggio non riuscito: '+e.message)}}
 
 /* ---------- avvio ---------- */
 (function(){
