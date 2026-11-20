@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Piatto Segreto – Dashboard</title>
 <style>
-:root{--bg1:#2a0a1b;--bg2:#5b1432;--gold:#ffd166;--gold2:#f4a261;--cream:#fff4e0;--card:rgba(255,255,255,.09);--line:rgba(255,209,102,.35);--ok:#5fd68a;--bad:#ff6b6b}
+:root{--bg1:#2a0a1b;--bg2:#5b1432;--gold:#ffd166;--gold2:#f4a261;--cream:#fff4e0;--card:rgba(255,255,255,.09);--line:rgba(255,209,102,.35);--ok:#5fd68a;--bad:#ff6b6b;--pink:#ff8fb1}
 *{box-sizing:border-box}
 html{font-size:clamp(14px,1.25vw,28px)}
 body{margin:0;min-height:100vh;color:var(--cream);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 15% 10%,#8a1f4a 0,transparent 45%),radial-gradient(circle at 90% 90%,#7a3a0e 0,transparent 40%),linear-gradient(160deg,var(--bg1),var(--bg2));background-attachment:fixed}
@@ -87,13 +87,31 @@ label{display:block;margin:.6rem 0 .2rem;font-size:.9rem;color:var(--gold)}
 .sgrid label{font-size:.85rem}
 .chk{display:flex;align-items:center;gap:.6rem;margin:.8rem 0;font-size:1rem;color:var(--cream)}
 .chk input{width:1.3rem;height:1.3rem}
+/* riepilogo finale */
+.recap{display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:1rem;text-align:left;margin-top:1rem}
+.pcard{background:rgba(255,255,255,.09);border:1px solid var(--line);border-radius:1.1rem;padding:1rem;animation:pop .5s both}
+.pcard.first{border:2px solid var(--gold);box-shadow:0 0 1.5rem rgba(255,209,102,.45)}
+.phead{display:flex;align-items:center;gap:.7rem}
+.phead .medal{font:2rem Georgia,serif;min-width:2.6rem;color:var(--gold)}
+.phead .pn{flex:1;font:1.6rem Georgia,serif;color:#fff}
+.phead .pt{font-weight:800;font-size:2rem;color:var(--gold)}
+.pdish{display:flex;gap:.7rem;align-items:center;margin:.7rem 0;padding:.5rem;border-radius:.8rem;background:rgba(0,0,0,.25)}
+.pdish img{width:5rem;height:5rem;object-fit:cover;border-radius:.6rem;background:rgba(0,0,0,.3);flex:none}
+.pdish b{color:#fff}
+.lines{margin:.3rem 0 0;padding:0;list-style:none;font-size:.95rem}
+.lines li{display:flex;justify-content:space-between;gap:.6rem;padding:.3rem 0;border-bottom:1px dashed rgba(255,209,102,.2)}
+.lines li span:first-child{flex:1}
+.lines li .v{font-weight:800;color:var(--gold);white-space:nowrap}
+.lines li .v.neg{color:var(--bad)}
+.lines li.tot{border-bottom:0;font-size:1.1rem;font-weight:700}
+.det{font-size:.8rem;opacity:.75;display:block}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:60}
 #modal.on{display:flex}
 .mbox{background:#3b0f25;border:2px solid var(--gold);border-radius:1.2rem;padding:1.5rem 2rem;max-width:34rem;font-size:1.2rem;white-space:pre-line}
 #toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:.7rem 1.4rem;border-radius:2rem;z-index:70;display:none;font-size:1rem;max-width:90vw}
 .rules li{margin:.5rem 0;font-size:1.25rem}
 .pv{max-width:12rem;max-height:9rem;border-radius:.5rem;margin-top:.4rem}
-@media(max-width:700px){html{font-size:15px}h1{font-size:2.6rem}.stage h1{font-size:3rem}.stage .sub{font-size:1.5rem}.cd{font-size:9rem}.cd.txt{font-size:3rem}.dishname{font-size:2rem}.frow{font-size:1.2rem}.frow.winner{font-size:1.6rem}}
+@media(max-width:700px){html{font-size:15px}h1{font-size:2.6rem}.stage h1{font-size:3rem}.stage .sub{font-size:1.5rem}.cd{font-size:9rem}.cd.txt{font-size:3rem}.dishname{font-size:2rem}.frow{font-size:1.2rem}.frow.winner{font-size:1.6rem}.recap{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -131,6 +149,8 @@ function SET(){
   else{const n=Number(s[k]);o[k]=Number.isFinite(n)?Math.round(n):DEF[k]}}
  o.hidden=Math.max(0,Math.min(50,o.hidden));return o}
 const sg=n=>(n>0?'+':'')+n;
+/* true se nel turno idx (0-based) la classifica parziale va nascosta */
+const isHiddenTurn=(idx,n)=>{const h=SET().hidden;return h>0&&idx>=n-h};
 
 /* ---------- audio / coriandoli ---------- */
 let AC;function ac(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.resume)AC.resume()}catch(e){}return AC}
@@ -205,25 +225,25 @@ function scoreDish(d){
  const guessers=valid.filter(i=>a.votes[i]===a.author);
  const wrongs=valid.filter(i=>a.votes[i]!==a.author);
  const k=guessers.length,E=valid.length;
- let ap;
- if(E===0)ap=0;
- else if(k===0)ap=st.none;
- else if(k===E)ap=st.all;
- else if(k===1)ap=st.one;
- else if(k<E/2)ap=st.less;
- else ap=st.maj;
- return{author:a.author,guessers,wrongs,partners,k,authorPts:ap,possible:E}}
+ let ap,rule;
+ if(E===0){ap=0;rule='nessun voto valido'}
+ else if(k===0){ap=st.none;rule='nessuno ha indovinato'}
+ else if(k===E){ap=st.all;rule='hanno indovinato tutti'}
+ else if(k===1){ap=st.one;rule='ha indovinato una sola persona'}
+ else if(k<E/2){ap=st.less;rule='meno della metà ha indovinato'}
+ else{ap=st.maj;rule='metà o più ha indovinato'}
+ return{author:a.author,votes:a.votes,guessers,wrongs,partners,k,authorPts:ap,possible:E,rule}}
 function guessPoints(list){const st=SET(),m={};plist().forEach(p=>m[p.id]=0);
  list.forEach(d=>{const s=scoreDish(d.id);if(!s)return;
   s.guessers.forEach(g=>{if(g in m)m[g]+=st.guess});
   s.wrongs.forEach(w=>{if(w in m)m[w]+=st.wrong})});return m}
 function finalTotals(){
- const st=SET(),ps=plist(),A={},G={},GP={};ps.forEach(p=>{A[p.id]=0;G[p.id]=0;GP[p.id]=0});
+ const st=SET(),ps=plist(),A={},G={},GP={},W={};ps.forEach(p=>{A[p.id]=0;G[p.id]=0;GP[p.id]=0;W[p.id]=0});
  dlist().forEach(d=>{const s=scoreDish(d.id);if(!s)return;if(s.author in A)A[s.author]+=s.authorPts;
   s.guessers.forEach(g=>{if(g in G){G[g]++;GP[g]+=st.guess}});
-  s.wrongs.forEach(w=>{if(w in GP)GP[w]+=st.wrong})});
+  s.wrongs.forEach(w=>{if(w in GP){W[w]++;GP[w]+=st.wrong}})});
  const max=Math.max(0,...Object.values(G));
- const rows=ps.map(p=>{const b=(max>0&&G[p.id]===max)?st.bonus:0;return{id:p.id,name:p.name,a:A[p.id],g:G[p.id],gp:GP[p.id],b,tot:A[p.id]+GP[p.id]+b}});
+ const rows=ps.map(p=>{const b=(max>0&&G[p.id]===max)?st.bonus:0;return{id:p.id,name:p.name,a:A[p.id],g:G[p.id],w:W[p.id],gp:GP[p.id],b,tot:A[p.id]+GP[p.id]+b}});
  rows.sort((x,y)=>y.tot-x.tot||x.name.localeCompare(y.name));
  rows.forEach((r,i)=>r.pos=(i>0&&r.tot===rows[i-1].tot)?rows[i-1].pos:i+1);return rows}
 /* pronti a partire: ogni piatto ha autore+nome e ogni partecipante ha il proprio piatto */
@@ -244,10 +264,10 @@ function resizeImg(file,max,q){return new Promise((res,rej)=>{const fr=new FileR
 /* ---------- navigazione ---------- */
 function go(v,d){
  view=v;dishId=d||null;runId++;
- if(['home','ready','countdown','dish','result','reveal','final'].includes(v))DB.set('core/state',{view:v,dishId:dishId,rev:Date.now()}).catch(()=>{});
+ if(['home','ready','countdown','dish','result','reveal','final','recap'].includes(v))DB.set('core/state',{view:v,dishId:dishId,rev:Date.now()}).catch(()=>{});
  render();window.scrollTo(0,0)}
 function render(){
- ({home:rHome,rules:rRules,settings:rSettings,regia:rRegia,ready:rReady,countdown:rCountdown,dish:rDish,result:rResult,revcheck:rRevCheck,reveal:rReveal,final:rFinal})[view]();
+ ({home:rHome,rules:rRules,settings:rSettings,regia:rRegia,ready:rReady,countdown:rCountdown,dish:rDish,result:rResult,revcheck:rRevCheck,reveal:rReveal,final:rFinal,recap:rRecap})[view]();
  hydrate()}
 function onData(){
  if((view==='dish'||view==='result')&&!S.dishes[dishId]){go('home');return}
@@ -278,6 +298,7 @@ function rRules(){
  '<li>Votare te stesso su un piatto che non è tuo conta come voto sbagliato.</li>'+
  '<li><b>Indovino:</b> '+sg(st.guess)+' per ogni piatto attribuito alla persona giusta'+(st.wrong?', '+sg(st.wrong)+' per ogni voto sbagliato':'')+'. A fine gioco '+sg(st.bonus)+' a chi ne ha indovinati di più (pari merito: a tutti).</li>'+
  '<li><b>Autore</b> (in base a quanti indovinano il suo piatto, esclusi i voti nulli): nessuno '+sg(st.none)+' · una persona '+sg(st.one)+' · meno della metà '+sg(st.less)+' · la maggioranza (anche esattamente metà) fino a tutti tranne uno '+sg(st.maj)+' · tutti '+sg(st.all)+'.</li>'+
+ (st.hidden>0?'<li>Negli <b>ultimi '+st.hidden+' turni</b> la classifica parziale resta nascosta: suspense fino alla fine!</li>':'')+
  '<li>Il voto è definitivo. Gli autori e la classifica si scoprono solo alla fine!</li></ul></div>'+
  '<button class="btn" data-a="home">← Indietro</button>'}
 
@@ -297,17 +318,25 @@ async function rCountdown(){
  const ds=dlist();if(ds.length)go('dish',ds[0].id);else go('home')}
 
 /* ---------- Impostazioni ---------- */
+function hiddenPreview(h){
+ const n=dlist().length;
+ if(!n)return 'Nessun piatto caricato: l\'anteprima comparirà dopo averli caricati.';
+ if(h<=0)return 'Con '+n+' piatti la classifica parziale si vede sempre.';
+ if(h>=n)return 'Con '+n+' piatti la classifica parziale non si vede mai.';
+ const v=n-h;return 'Con '+n+' piatti: classifica visibile '+(v===1?'solo dopo il turno 1':'dopo i turni 1–'+v)+', nascosta dal turno '+(v+1)+' al '+n+'.'}
 function rSettings(){
  const st=SET();
- const f=(k,l)=>'<div><label for="s_'+k+'">'+l+'</label><input type="number" step="1" id="s_'+k+'" value="'+st[k]+'"></div>';
+ const f=(k,l,extra)=>'<div><label for="s_'+k+'">'+l+'</label><input type="number" step="1" id="s_'+k+'" value="'+st[k]+'"'+(extra||'')+'></div>';
  $('#app').innerHTML='<h2>🎚️ Impostazioni punteggio</h2>'+
  '<div class="card"><h3>Indovino</h3><div class="sgrid">'+f('guess','Punti per piatto indovinato')+f('wrong','Punti per voto sbagliato (negativo = malus)')+f('bonus','Bonus miglior indovino')+'</div></div>'+
  '<div class="card"><h3>Autore (depistaggio)</h3><div class="sgrid">'+f('none','Nessuno indovina')+f('one','Indovina una sola persona')+f('less','Indovinano meno della metà')+f('maj','Metà o più, ma non tutti')+f('all','Indovinano tutti')+'</div>'+
  '<div class="note">Valori negativi = malus. Il calcolo considera solo i votanti validi (esclusi autore e partner). Se un solo votante è valido e indovina, vale «Indovinano tutti».</div></div>'+
- '<div class="card"><h3>Gioco</h3><div class="sgrid">'+f('hidden','Ultimi piatti con classifica nascosta')+'</div>'+
- '<label class="chk"><input type="checkbox" id="s_partner"'+(st.partner?' checked':'')+'> Consenti di indicare «💑 il piatto del mio partner» (il suo voto su quel piatto è nullo)</label></div>'+
+ '<div class="card"><h3>Suspense</h3><div class="sgrid">'+f('hidden','Ultimi turni con classifica nascosta (0 = sempre visibile)',' min="0" max="50"')+'</div>'+
+ '<div class="note" id="hidPrev">'+esc(hiddenPreview(st.hidden))+'</div></div>'+
+ '<div class="card"><h3>Coppie</h3><label class="chk"><input type="checkbox" id="s_partner"'+(st.partner?' checked':'')+'> Consenti di indicare «💑 il piatto del mio partner» (il suo voto su quel piatto è nullo)</label></div>'+
  '<div class="note">Le modifiche valgono anche per i piatti già votati: punteggi e classifiche vengono ricalcolati.</div>'+
- '<button class="btn" data-a="savesettings">💾 Salva impostazioni</button><button class="btn ghost" data-a="defsettings">↺ Valori predefiniti</button><button class="btn ghost" data-a="home">← Torna alla home</button>'}
+ '<button class="btn" data-a="savesettings">💾 Salva impostazioni</button><button class="btn ghost" data-a="defsettings">↺ Valori predefiniti</button><button class="btn ghost" data-a="home">← Torna alla home</button>';
+ $('#s_hidden').oninput=()=>{const n=Number($('#s_hidden').value);$('#hidPrev').textContent=Number.isFinite(n)?hiddenPreview(Math.max(0,Math.round(n))):'Valore non valido'}}
 async function saveSettings(def){
  let o;
  if(def)o=Object.assign({},DEF);
@@ -316,7 +345,7 @@ async function saveSettings(def){
    const n=Number($('#s_'+k).value);
    if($('#s_'+k).value.trim()===''||!Number.isFinite(n))return toast('Valore non valido: '+k);
    o[k]=Math.round(n)}
-  if(o.hidden<0||o.hidden>50)return toast('Classifica nascosta: valore tra 0 e 50')}
+  if(o.hidden<0||o.hidden>50)return toast('Turni con classifica nascosta: valore tra 0 e 50')}
  await W(()=>DB.set('core/settings',o));toast('Impostazioni salvate ✅');if(view==='settings')rSettings()}
 
 /* ---------- Pagina piatto ---------- */
@@ -340,14 +369,15 @@ function rResult(){
  const st=SET(),ds=dlist(),idx=ds.findIndex(x=>x.id===dishId),d=ds[idx];if(!d){go('home');return}
  const s=scoreDish(d.id);
  if(!s){$('#app').innerHTML='<div class="alert">Votazione non ancora completa.</div><button class="btn" data-a="show" data-id="'+esc(d.id)+'">← Torna al piatto</button>';return}
- const last=idx===ds.length-1,hidden=st.hidden>0&&idx>=ds.length-st.hidden;
+ const last=idx===ds.length-1,hidden=isHiddenTurn(idx,ds.length);
  /* voti nulli e numero di voti validi NON mostrati: rivelerebbero autore/partner */
  let h='<h2>📊 Esito – Piatto n° '+d.num+(d.name?': '+esc(d.name):'')+'</h2><div class="big" style="font-size:2.4rem;margin:.6rem">Risposte giuste: <b style="color:var(--gold)">'+s.k+'</b></div>';
  h+=s.k?'<div class="chips">'+s.guessers.map(g=>'<span class="chip">'+esc(pname(g))+' <b style="color:var(--gold)">'+sg(st.guess)+'</b></span>').join('')+'</div>':'<div class="big">🕵️ Nessuno ha indovinato!</div>';
- if(hidden)h+='<div class="hide">🤫 <b>Classifica nascosta</b><br>Siamo agli ultimi piatti: la suspense cresce!</div>';
+ if(hidden)h+='<div class="hide">🤫 <b>Classifica nascosta</b><br>'+(last?'Ultimo turno: tutto si decide alla fine!':'Mancano '+(ds.length-idx-1)+' piatti: la suspense cresce!')+'</div>';
  else{const gp=guessPoints(ds.slice(0,idx+1)),hl=new Set(s.guessers);
   const rows=plist().map(p=>({id:p.id,name:p.name,pt:gp[p.id]})).sort((x,y)=>y.pt-x.pt||x.name.localeCompare(y.name));
-  h+='<h3>Classifica parziale (punti indovino)</h3><div class="rank">'+rows.map(r=>'<div class="rrow'+(hl.has(r.id)?' hl':'')+'"><span>'+esc(r.name)+(hl.has(r.id)?' ⭐':'')+'</span><b>'+r.pt+'</b></div>').join('')+'</div>'}
+  h+='<h3>Classifica parziale (punti indovino)</h3><div class="rank">'+rows.map(r=>'<div class="rrow'+(hl.has(r.id)?' hl':'')+'"><span>'+esc(r.name)+(hl.has(r.id)?' ⭐':'')+'</span><b>'+r.pt+'</b></div>').join('')+'</div>';
+  if(isHiddenTurn(idx+1,ds.length)&&!last)h+='<div class="note" style="text-align:center">🤫 Ultima classifica visibile: dal prossimo piatto resta nascosta fino alla fine!</div>'}
  h+=last?'<button class="btn" data-a="revstart">🔎 Svela gli autori</button>':'<button class="btn" data-a="next">➡️ Prossimo piatto</button>';
  $('#app').innerHTML=h}
 
@@ -379,12 +409,15 @@ async function doReveal(){
 function rFinal(){
  const rows=finalTotals();
  $('#app').innerHTML='<h2 style="font-size:3rem">🏆 Classifica finale</h2><div id="fl">'+rows.map((r,i)=>'<div class="frow" id="fr'+i+'"><span class="pos">?</span><span class="fname">• • •</span></div>').join('')+'</div>'+
- '<button class="btn" id="susp" data-a="suspense">🎬 Avvia la suspense</button><div><button class="btn ghost small" data-a="home">Torna alla home</button></div>'}
+ '<button class="btn" id="susp" data-a="suspense">🎬 Avvia la suspense</button>'+
+ '<div id="recapBox" style="display:none"><button class="btn huge" data-a="recap">📋 Riepilogo completo</button></div>'+
+ '<div><button class="btn ghost small" data-a="home">Torna alla home</button></div>'}
 function fillRow(i,r,cls){
  const el=$('#fr'+i);if(!el)return;el.className='frow show '+(cls||'');
  const medal=r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos+'°';
  el.innerHTML='<span class="pos">'+medal+'</span><span class="fname">'+esc(r.name)+'<small>autore '+r.a+' · indovino '+r.gp+' ('+r.g+' giusti)'+(r.b?' · bonus '+sg(r.b):'')+'</small></span><span class="tot">'+r.tot+'</span>'}
 const focusRow=i=>{const e=$('#fr'+i);if(e)e.scrollIntoView({block:'center',behavior:'smooth'})};
+function showRecapBtn(){const b=$('#recapBox'),s=$('#susp');if(s)s.style.display='none';if(b){b.style.display='';b.scrollIntoView({block:'center',behavior:'smooth'})}}
 async function suspense(){
  const rows=finalTotals(),my=++runId,ok=()=>my===runId&&view==='final',n=rows.length;
  if(!n)return;
@@ -397,7 +430,39 @@ async function suspense(){
  el.remove();fanfare();confetti(120);
  for(let i=0;i<nw;i++)fillRow(i,rows[i],'winner');focusRow(0);
  if(nw===1&&n>=2){await sleep(3500);if(!ok())return;drum(1200);await sleep(1500);if(!ok())return;ding();fillRow(1,rows[1]);focusRow(1)}
- await sleep(1500);if(!ok())return;confetti(60)}
+ await sleep(1500);if(!ok())return;confetti(60);
+ await sleep(2500);if(!ok())return;showRecapBtn()}
+
+/* ---------- Riepilogo completo ---------- */
+function recapData(){
+ const st=SET(),ds=dlist(),rows=finalTotals(),scores={};
+ ds.forEach(d=>scores[d.id]=scoreDish(d.id));
+ return rows.map(r=>{
+  const mine=ds.find(d=>d.owner===r.id),ms=mine?scores[mine.id]:null;
+  const right=[],wrong=[],nul=[];
+  ds.forEach(d=>{const s=scores[d.id];if(!s||s.author===r.id)return;
+   if(s.guessers.includes(r.id))right.push(d);
+   else if(s.partners.includes(r.id))nul.push(d);
+   else if(s.wrongs.includes(r.id))wrong.push({d,to:s.votes[r.id]})});
+  return Object.assign({},r,{mine,ms,right,wrong,nul,st})})}
+function rRecap(){
+ const data=recapData();
+ const line=(label,val,det)=>'<li><span>'+label+(det?'<span class="det">'+det+'</span>':'')+'</span><span class="v'+(val<0?' neg':'')+'">'+sg(val)+'</span></li>';
+ $('#app').innerHTML='<h2 style="font-size:2.8rem">📋 Riepilogo della serata</h2><div class="sub" style="font-size:1.2rem">Chi ha cucinato cosa e come ha conquistato i suoi punti</div>'+
+ '<div class="recap">'+data.map((r,i)=>{
+  const st=r.st,medal=r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos+'°';
+  let h='<div class="pcard'+(r.pos===1?' first':'')+'" style="animation-delay:'+(i*.12)+'s"><div class="phead"><span class="medal">'+medal+'</span><span class="pn">'+esc(r.name)+'</span><span class="pt">'+r.tot+' pt</span></div>';
+  if(r.mine)h+='<div class="pdish"><img data-dish="'+esc(r.mine.id)+'" alt="Foto del piatto n° '+r.mine.num+'"><div><span class="num" style="font-size:.9rem">n° '+r.mine.num+'</span><br><b>'+esc(dname(r.mine))+'</b></div></div>';
+  else h+='<div class="pdish"><div>🍽️ Nessun piatto</div></div>';
+  h+='<ul class="lines">';
+  if(r.ms)h+=line('👨‍🍳 Depistaggio',r.ms.authorPts,(r.ms.k?'Indovinato da '+r.ms.guessers.map(pname).join(', '):'Nessuno ha indovinato')+' · '+r.ms.rule);
+  h+=line('🎯 Piatti indovinati ('+r.right.length+' × '+sg(st.guess)+')',r.right.length*st.guess,r.right.length?r.right.map(d=>'n° '+d.num+' '+dname(d)).join(' · '):'nessuno');
+  if(r.wrong.length)h+=line('❌ Voti sbagliati ('+r.wrong.length+' × '+sg(st.wrong)+')',r.wrong.length*st.wrong,r.wrong.map(x=>'n° '+x.d.num+' → '+pname(x.to)).join(' · '));
+  if(r.nul.length)h+='<li><span>💑 Voto nullo sul piatto del partner<span class="det">'+r.nul.map(d=>'n° '+d.num+' '+esc(dname(d))).join(' · ')+'</span></span><span class="v">0</span></li>';
+  if(r.b)h+=line('🏅 Bonus miglior indovino',r.b,r.g+' piatti indovinati');
+  h+='<li class="tot"><span>Totale</span><span class="v">'+r.tot+'</span></li></ul></div>';
+  return h}).join('')+'</div>'+
+ '<div style="margin-top:1.5rem"><button class="btn ghost" data-a="final">← Classifica</button><button class="btn ghost" data-a="home">🏠 Home</button></div>'}
 
 /* ---------- Regia ---------- */
 function votLink(){
@@ -418,7 +483,7 @@ function rRegia(){
  '<div style="margin-top:.6rem"><button class="btn small" data-a="savedish" id="dS">➕ Aggiungi piatto</button><button class="btn small ghost" data-a="canceledit" id="dC" style="display:none">Annulla modifica</button></div><div id="rDishes"></div></div>'+
  '<div class="card"><h3>4 · Fase della serata</h3><div id="rPhase"></div></div>'+
  '<div class="card"><h3>5 · Strumenti</h3><button class="btn small ghost" data-a="settings">🎚️ Impostazioni punteggio</button><button class="btn small ghost" data-a="resetvotes">🧹 Azzera tutti i voti</button><button class="btn small ghost" data-a="export">⬇️ Esporta backup</button><button class="btn small ghost" data-a="importbtn">⬆️ Importa backup</button><input type="file" id="iF" accept="application/json" style="display:none">'+
- '<div style="margin-top:.6rem"><button class="btn small" data-a="revstart">🔎 Svela autori e classifica</button></div></div>'+
+ '<div style="margin-top:.6rem"><button class="btn small" data-a="revstart">🔎 Svela autori e classifica</button><button class="btn small ghost" data-a="recap">📋 Riepilogo completo</button></div></div>'+
  '<button class="btn" data-a="home">← Torna alla home</button>';
  $('#dF').onchange=async e=>{const f=e.target.files[0];pendingImg=null;$('#dP').style.display='none';if(!f)return;
   try{pendingImg=await resizeImg(f,800,.72);$('#dP').src=pendingImg;$('#dP').style.display='block'}catch(x){toast('Immagine non leggibile')}};
@@ -459,6 +524,7 @@ const A={
  revote(d){revote(d.id)},
  revstart(){revStart()},reveal(){doReveal()},
  final(){go('final')},suspense(){suspense()},
+ recap(){if(bad().length||!dlist().length){view='revcheck';render();return}go('recap')},
  savecfg(){saveCfg()},copylink(){copyLink()},
  async addpart(){const n=$('#pN').value.trim().replace(/\s+/g,' ');if(!n)return;
   if(plist().some(p=>p.name.toLowerCase()===n.toLowerCase()))return toast('Nome già presente');
@@ -504,7 +570,7 @@ async function saveDish(){
  A.canceledit()}
 async function exportJ(){
  try{const core=await DB.get('core'),img=await DB.get('img');
-  const blob=new Blob([JSON.stringify({app:'piatto-segreto',ver:5,session:cleanSession(cfg.session),core:core||{},img:img||{}})],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({app:'piatto-segreto',ver:6,session:cleanSession(cfg.session),core:core||{},img:img||{}})],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='piatto_segreto_'+cleanSession(cfg.session)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
  catch(e){toast('Esportazione fallita: '+e.message)}}
 async function importJ(e){

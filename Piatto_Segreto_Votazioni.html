@@ -292,7 +292,7 @@ function renderGame(){
  if(!d){
   if(st.view==='ready')h+='<div class="stage"><div class="emoji">🍽️</div><h1>Siamo pronti?</h1><div class="big2">Il gioco sta per partire.</div></div>';
   else if(st.view==='countdown')h+='<div class="cd txt">Buon appetito! 🍽️</div>';
-  else{const msg=st.view==='reveal'?'📺 Si svelano gli autori: guarda lo schermo!':st.view==='final'?'🏆 Classifica finale in corso: guarda lo schermo!':'⏳ Attendi: il prossimo piatto comparirà qui quando sarà mostrato sullo schermo.';
+  else{const msg=st.view==='reveal'?'📺 Si svelano gli autori: guarda lo schermo!':st.view==='final'?'🏆 Classifica finale in corso: guarda lo schermo!':st.view==='recap'?'📋 Sullo schermo c\'è il riepilogo completo della serata. Grazie per aver giocato! 🎉':'⏳ Attendi: il prossimo piatto comparirà qui quando sarà mostrato sullo schermo.';
    h+='<div class="card" style="text-align:center;font-size:1.2rem">'+msg+'</div>'}
   $('#app').innerHTML=h;bindExit();return}
  h+='<div class="card"><span class="num">Piatto n° '+d.num+'</span>'+(d.name?'<div class="name">'+esc(d.name)+'</div>':'')+'<img class="img" alt="Foto del piatto n° '+d.num+'" src="'+esc(imgSrc(d))+'"></div>';
