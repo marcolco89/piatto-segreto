@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Piatto Segreto – Votazioni</title>
+<style>
+:root{--gold:#ffd166;--gold2:#f4a261;--cream:#fff4e0;--line:rgba(255,209,102,.4);--ok:#5fd68a;--bad:#ff6b6b;--pink:#ff8fb1}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;color:var(--cream);font:16px "Trebuchet MS","Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 10% 0,#8a1f4a 0,transparent 50%),linear-gradient(160deg,#2a0a1b,#5b1432);background-attachment:fixed}
+h1,h2{font-family:Georgia,serif;color:var(--gold);margin:.3em 0}
+h1{font-size:2rem;text-align:center}
+#app{max-width:34rem;margin:0 auto;padding:.8rem .9rem 5rem}
+.card{background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:1.1rem;padding:1rem;margin:.8rem 0}
+label{display:block;margin:.8rem 0 .25rem;color:var(--gold);font-size:.9rem}
+input{font:inherit;width:100%;padding:.8em;border-radius:.7rem;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--cream)}
+.btn{font:inherit;font-weight:700;font-size:1.05rem;width:100%;border:0;border-radius:3rem;padding:.9em;margin:.4rem 0;cursor:pointer;color:#3a1200;background:linear-gradient(180deg,var(--gold),var(--gold2));box-shadow:0 .2rem 0 #b3651f}
+.btn:active{transform:translateY(2px)}
+.btn:focus-visible,.opt:focus-visible,.tab:focus-visible,.lnk:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.btn.ghost{background:rgba(255,255,255,.12);color:var(--cream);box-shadow:none;border:1px solid var(--line)}
+.btn[disabled]{opacity:.45}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;opacity:.9}
+.lnk{color:var(--gold);text-decoration:underline;cursor:pointer;background:none;border:0;font:inherit;padding:.2rem}
+.tabs{display:flex;gap:.4rem;overflow-x:auto;padding:.5rem 0;position:sticky;top:0;z-index:3;background:linear-gradient(#2a0a1b,#2a0a1bdd,transparent)}
+.tab{flex:0 0 auto;min-width:2.8rem;height:2.8rem;border-radius:50%;border:2px solid var(--line);background:rgba(255,255,255,.1);color:var(--cream);font:700 1.1rem Georgia,serif;cursor:pointer}
+.tab.on{background:var(--gold);color:#3a1200;border-color:#fff}
+.tab.done::after{content:"✓";font-size:.65rem;position:relative;top:-.7em;left:.1em}
+.num{display:inline-block;background:var(--gold);color:#3a1200;font:800 1.1rem Georgia,serif;border-radius:2rem;padding:.1em .8em}
+.name{font:1.7rem Georgia,serif;margin:.3rem 0}
+.img{width:100%;max-height:48vh;object-fit:contain;border-radius:1rem;background:rgba(0,0,0,.3);border:2px solid var(--gold);min-height:6rem}
+.opt{display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;font:inherit;font-size:1.15rem;padding:.85em 1em;margin:.4rem 0;border-radius:.9rem;border:2px solid var(--line);background:rgba(255,255,255,.08);color:var(--cream);cursor:pointer}
+.opt .dot{width:1.3rem;height:1.3rem;border-radius:50%;border:2px solid var(--gold);flex:none}
+.opt.sel{background:rgba(255,209,102,.3);border-color:var(--gold);font-weight:700}
+.opt.sel .dot{background:var(--gold);box-shadow:inset 0 0 0 .2rem #5b1432}
+.opt.partner{border-style:dashed;border-color:var(--pink);margin-top:1rem}
+.opt.partner .dot{border-color:var(--pink)}
+.opt.partner.sel{background:rgba(255,143,177,.25)}
+.opt.partner.sel .dot{background:var(--pink)}
+.opt[disabled]{opacity:.45;cursor:not-allowed}
+.sep{text-align:center;font-size:.85rem;opacity:.75;margin:.8rem 0 0}
+.hint{font-size:.95rem;color:var(--gold);margin:.5rem 0;text-align:center}
+.alert{background:rgba(255,80,80,.2);border:2px solid var(--bad);border-radius:.9rem;padding:.7rem;margin:.6rem 0;text-align:center;font-weight:700}
+.info{background:rgba(255,209,102,.18);border:1px solid var(--gold);border-radius:.9rem;padding:.7rem;margin:.6rem 0;text-align:center}
+.done-box{text-align:center;padding:1.2rem}
+.done-box .big{font-size:2.2rem;color:var(--ok);font-weight:800}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:20;padding:1rem}
+#modal.on{display:flex}
+.mbox{background:#3b0f25;border:2px solid var(--gold);border-radius:1.1rem;padding:1.2rem;width:100%;max-width:26rem;white-space:pre-line;font-size:1.1rem}
+#toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#000d;padding:.7rem 1.2rem;border-radius:2rem;display:none;z-index:30;max-width:90vw;text-align:center}
+#conn{font-size:.75rem}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="modal" role="dialog" aria-modal="true"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const uid=p=>p+Math.random().toString(36).slice(2,9);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+ set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',3500)}
+function ask(msg,ok,cancel){return new Promise(res=>{const m=$('#modal');
+ m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p><button class="btn" id="mYes">'+esc(ok||'Conferma')+'</button><button class="btn ghost" id="mNo">'+esc(cancel||'Annulla')+'</button></div>';
+ m.classList.add('on');const close=v=>{m.classList.remove('on');m.innerHTML='';res(v)};
+ $('#mYes').onclick=()=>close(true);$('#mNo').onclick=()=>close(false);$('#mYes').focus()})}
+function cleanSession(s){return String(s||'').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'')||'serata'}
+function cleanUrl(u){
+ u=String(u||'').trim().replace(/\/+$/,'');
+ if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
+ return u}
+function alertBox(msg){return new Promise(res=>{const m=$('#modal');
+ m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p><button class="btn" id="mOk">OK</button></div>';m.classList.add('on');
+ $('#mOk').onclick=()=>{m.classList.remove('on');m.innerHTML='';res()};$('#mOk').focus()})}
+
+/* valore speciale del voto "il piatto è del mio partner" (voto nullo) */
+const PARTNER='__partner__';
+
+/* ---------- database (Firebase REST o locale) ---------- */
+let cfg={session:'',url:''};
+const DB={
+ local(){return !cfg.url},
+ root(){return cleanUrl(cfg.url)+'/piatto/'+cleanSession(cfg.session)},
+ lkey(){return 'ps_local_'+cleanSession(cfg.session)},
+ u(path){return this.root()+(path?'/'+path:'')+'.json'},
+ async get(path){
+  if(this.local()){let n=LS.get(this.lkey(),{});for(const p of path.split('/').filter(Boolean)){if(n==null||typeof n!=='object')return null;n=n[p]}return n==null?null:n}
+  const r=await fetch(this.u(path),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},
+ async set(path,val){
+  if(this.local()){const parts=path.split('/').filter(Boolean);let t=LS.get(this.lkey(),{}),n=t;
+   for(let i=0;i<parts.length-1;i++){if(n[parts[i]]==null||typeof n[parts[i]]!=='object')n[parts[i]]={};n=n[parts[i]]}
+   n[parts[parts.length-1]]=val;if(!LS.set(this.lkey(),t))throw new Error('memoria piena');return}
+  const r=await fetch(this.u(path),{method:'PUT',body:JSON.stringify(val)});if(!r.ok)throw new Error('HTTP '+r.status)},
+ /* scrive solo se la chiave non esiste ancora (anti doppio voto); true = scritto */
+ async setIfAbsent(path,val){
+  if(this.local()){if(await this.get(path)!=null)return false;await this.set(path,val);return true}
+  try{const r=await fetch(this.u(path),{method:'PUT',body:JSON.stringify(val),headers:{'if-match':'null_etag'}});
+   if(r.status===412)return false;if(!r.ok)throw new Error('HTTP '+r.status);return true}
+  catch(e){if(!(e instanceof TypeError))throw e;
+   if(await this.get(path)!=null)return false;await this.set(path,val);return true}}
+};
+
+/* ---------- stato ---------- */
+let S={participants:{},dishes:{},votes:{},state:{},settings:{}},lastRaw='',polling=false,timer=null,ok=true;
+let me=null,cur=null,lastRev=null,pending=null,page='vote';
+const draft={};
+const sel={},IMG={};
+function flagsKey(){return 'ps_flags_'+cleanSession(cfg.session)+'_'+(me?me.id:'')}
+let flags={seen:{},cancel:{}};
+
+const dlist=()=>Object.entries(S.dishes).map(([id,d])=>({id,num:Number(d.num)||0,name:d.name||'',owner:d.owner||'',v:d.v})).sort((a,b)=>a.num-b.num);
+const plist=()=>Object.entries(S.participants).map(([id,p])=>({id,name:(p&&p.name)||'?'})).sort((a,b)=>a.name.localeCompare(b.name));
+const myDish=()=>dlist().find(d=>d.owner===me.id);
+const myVote=d=>(S.votes[d]||{})[me.id];
+const partnerOn=()=>!S.settings||S.settings.partner!==false;
+/* piatto (diverso da quello indicato) su cui ho già usato il voto "partner" */
+const partnerUsedOn=exceptId=>dlist().find(x=>x.id!==exceptId&&myVote(x.id)===PARTNER);
+
+async function poll(){
+ if(polling||!me)return;polling=true;
+ try{const c=(await DB.get('core'))||{};ok=true;const raw=JSON.stringify(c);
+  if(raw!==lastRaw){lastRaw=raw;S={participants:c.participants||{},dishes:c.dishes||{},votes:c.votes||{},state:c.state||{},settings:c.settings||{}};onData()}}
+ catch(e){ok=false;const c=$('#conn');if(c)c.textContent='⚠️ offline'}
+ polling=false}
+function onData(){
+ if(!S.participants[me.id]){logout('Sei stato rimosso dalla serata: rientra con il tuo nome.');return}
+ const st=S.state||{};
+ if(st.rev&&st.rev!==lastRev){lastRev=st.rev;if(st.dishId&&S.dishes[st.dishId]&&(st.view==='dish'||st.view==='result'))cur=st.dishId}
+ const ds=dlist();
+ if(!cur||!S.dishes[cur])cur=ds.length?ds[0].id:null;
+ /* rileva voti cancellati dalla dashboard */
+ ds.forEach(d=>{if(myVote(d.id)){flags.seen[d.id]=true}else if(flags.seen[d.id]){flags.seen[d.id]=false;flags.cancel[d.id]=true;delete sel[d.id]}});
+ LS.set(flagsKey(),flags);
+ if(page==='name'&&document.activeElement&&document.activeElement.tagName==='INPUT')return;
+ renderVote()}
+function enter(){
+ flags=LS.get(flagsKey(),{seen:{},cancel:{}});
+ $('#app').innerHTML='<div class="card" style="text-align:center">⏳ Collegamento in corso…</div>';
+ polling=false;poll();clearInterval(timer);timer=setInterval(poll,2000)}
+function logout(msg){clearInterval(timer);localStorage.removeItem('ps_me');me=null;lastRaw='';renderLogin({session:cfg.session,url:cfg.url});if(msg)toast(msg)}
+
+/* ---------- immagini ---------- */
+function imgSrc(d){const c=IMG[d.id];if(c&&c.v===d.v)return c.data;
+ IMG[d.id]={v:d.v,data:'',loading:true};
+ DB.get('img/'+d.id).then(r=>{IMG[d.id]={v:d.v,data:(r&&r.data)||''};if((cur===d.id||page==='name')&&!(document.activeElement&&document.activeElement.tagName==='INPUT'))renderVote()}).catch(()=>{delete IMG[d.id]});
+ return''}
+
+/* ---------- accesso ---------- */
+function renderLogin(prefill){
+ const f=prefill||{};
+ $('#app').innerHTML='<h1>🍽️ Piatto Segreto</h1><div class="card"><div class="hint" style="margin-top:0">Entra nella serata</div>'+
+ '<label for="fS">Codice sessione</label><input id="fS" value="'+esc(f.session)+'" autocapitalize="off" autocomplete="off">'+
+ '<label for="fU">URL database Firebase (vuoto = prova locale)</label><input id="fU" type="url" value="'+esc(f.url)+'" autocapitalize="off" autocomplete="off">'+
+ '<label for="fN">Il tuo nome</label><input id="fN" maxlength="30" value="'+esc(f.name)+'" autocomplete="off">'+
+ '<button class="btn" id="goBtn">Entra 🎉</button></div><div id="sure"></div>';
+ $('#goBtn').onclick=login;$('#fN').onkeydown=e=>{if(e.key==='Enter')login()}}
+async function login(){
+ const s=cleanSession($('#fS').value),u=cleanUrl($('#fU').value),n=$('#fN').value.trim().replace(/\s+/g,' ');
+ if(!n)return toast('Scrivi il tuo nome');
+ cfg={session:s,url:u};LS.set('ps_vcfg',cfg);
+ let ps;try{ps=(await DB.get('core/participants'))||{}}catch(e){return toast('Impossibile collegarsi al database')}
+ const ex=Object.entries(ps).find(([id,p])=>p&&p.name&&p.name.toLowerCase()===n.toLowerCase());
+ if(ex){pending={id:ex[0],name:ex[1].name};
+  $('#sure').innerHTML='<div class="card"><div class="info">Esiste già <b>'+esc(ex[1].name)+'</b>. Sei tu?</div><button class="btn" id="yes">Sì, sono io</button><button class="btn ghost" id="no">No, scelgo un altro nome</button></div>';
+  $('#yes').onclick=()=>finish(pending);$('#no').onclick=()=>{$('#sure').innerHTML='';$('#fN').value='';$('#fN').focus()};return}
+ const p={id:uid('p'),name:n};
+ try{await DB.set('core/participants/'+p.id,{name:n,t:Date.now()})}catch(e){return toast('Registrazione non riuscita: '+e.message)}
+ finish(p)}
+function finish(p){page='vote';me={id:p.id,name:p.name,session:cleanSession(cfg.session),url:cleanUrl(cfg.url)};LS.set('ps_me',me);cur=null;lastRev=null;lastRaw='';enter()}
+
+/* ---------- schermata voto ---------- */
+function voteLabel(v){
+ if(v===PARTNER)return '💑 piatto del tuo partner (voto nullo)';
+ return (S.participants[v]?S.participants[v].name:'(rimosso)')+(v===me.id?' (te stesso)':'')}
+function renderVote(){
+ if(!me)return;
+ if(page==='name')return renderName();
+ const ds=dlist(),d=ds.find(x=>x.id===cur),st=S.state||{};
+ let h='<div class="top"><span>👤 <b>'+esc(me.name)+'</b> · <span id="conn">'+(DB.local()?'💾 locale':'☁️ online')+'</span></span><button class="lnk" id="exit">Esci</button></div>';
+ if(st.view==='reveal')h+='<div class="info">📺 Si svelano gli autori: guarda lo schermo!</div>';
+ else if(st.view==='final')h+='<div class="info">🏆 Classifica finale in corso: guarda lo schermo!</div>';
+ if(!ds.length||!d){$('#app').innerHTML=h+'<div class="card" style="text-align:center">⏳ In attesa dei piatti…</div>';bindExit();return}
+ h+='<button class="btn ghost" id="nameBtn">✍️ Assegna un nome al piatto</button>';
+ h+='<div class="tabs">'+ds.map(x=>'<button class="tab'+(x.id===cur?' on':'')+(myVote(x.id)?' done':'')+'" data-id="'+esc(x.id)+'" aria-label="Piatto '+x.num+'">'+x.num+'</button>').join('')+'</div>';
+ h+='<div class="card"><span class="num">Piatto n° '+d.num+'</span>'+(d.name?'<div class="name">'+esc(d.name)+'</div>':'')+'<img class="img" alt="Foto del piatto n° '+d.num+'" src="'+esc(imgSrc(d))+'"></div>';
+ const isMine=d.owner===me.id;
+ if(isMine&&!sel[d.id])sel[d.id]=me.id;
+ const v=myVote(d.id);
+ if(v){h+='<div class="card done-box"><div class="big">✅ Voto confermato</div><p>Hai scelto <b>'+esc(voteLabel(v))+'</b>.<br>Il voto è definitivo. Attendi il prossimo piatto!</p></div>'}
+ else{
+  if(flags.cancel[d.id])h+='<div class="alert">🔄 Votazione annullata: devi votare di nuovo questo piatto.</div>';
+  h+='<div class="card"><h2 style="margin-top:0">Chi ha preparato questo piatto?</h2>'+
+  plist().filter(p=>!d.owner||(isMine?p.id===me.id:p.id!==me.id)).map(p=>'<button class="opt'+(sel[d.id]===p.id?' sel':'')+'" data-p="'+esc(p.id)+'"><span class="dot"></span>'+esc(p.name)+(p.id===me.id?' (io)':'')+'</button>').join('');
+  /* opzione partner: non sul proprio piatto, solo se abilitata e non già usata su un altro piatto */
+  if(!isMine&&partnerOn()){
+   const used=partnerUsedOn(d.id);
+   if(used&&sel[d.id]===PARTNER)delete sel[d.id];
+   h+='<div class="sep">— oppure —</div><button class="opt partner'+(sel[d.id]===PARTNER?' sel':'')+'" data-p="'+PARTNER+'"'+(used?' disabled':'')+'><span class="dot"></span>💑 È il piatto del mio partner (voto nullo)</button>'+
+   (used?'<div class="hint">Hai già usato questa opzione sul piatto n° '+used.num+'.</div>':'')}
+  h+=(isMine?'<div class="info">Questo è il tuo piatto: puoi votare solo te stesso.</div>':'')+
+  '<div class="hint">💡 Se il piatto è tuo, vota te stesso.'+(partnerOn()&&!isMine?'<br>💑 Se lo ha cucinato chi vive con te, scegli «piatto del mio partner».':'')+'</div>'+
+  '<button class="btn" id="conf"'+(sel[d.id]?'':' disabled')+'>CONFERMA VOTO</button></div>'}
+ $('#app').innerHTML=h;bindExit();
+ $('#nameBtn').onclick=()=>{page='name';renderName();window.scrollTo(0,0)};
+ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{cur=b.dataset.id;renderVote();window.scrollTo(0,0)});
+ document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(b.disabled)return;sel[d.id]=b.dataset.p;renderVote()});
+ const c=$('#conf');if(c)c.onclick=()=>confirmVote(d)}
+function bindExit(){const e=$('#exit');if(e)e.onclick=async()=>{if(await ask('Uscire da questo dispositivo? I voti già dati restano validi.','Esci'))logout()}}
+async function confirmVote(d){
+ const t=sel[d.id];if(!t)return;
+ if(t===PARTNER){
+  if(!partnerOn())return toast('Opzione «partner» disattivata dall\'organizzatore');
+  if(d.owner===me.id)return toast('Non puoi usare questa opzione sul tuo piatto');
+  const used=partnerUsedOn(d.id);if(used)return toast('Hai già usato questa opzione sul piatto n° '+used.num);
+ }else if(!S.participants[t])return;
+ const msg=t===PARTNER
+  ?'Piatto n° '+d.num+(d.name?' – '+d.name:'')+'\n\nDichiari che è il piatto del tuo PARTNER.\nIl voto sarà NULLO: nessun punto per te e non conta per l\'autore.\nPuoi usare questa opzione una sola volta.\n\nDopo la conferma il voto è DEFINITIVO.'
+  :'Piatto n° '+d.num+(d.name?' – '+d.name:'')+'\n\nVoti: '+(t===me.id?'te stesso (il piatto è tuo)':S.participants[t].name)+'\n\nDopo la conferma il voto è DEFINITIVO.';
+ if(!await ask(msg,'Sì, conferma','Controllo ancora'))return;
+ try{const done=await DB.setIfAbsent('core/votes/'+d.id+'/'+me.id,t);
+  if(!done)toast('Hai già votato questo piatto');
+  else{flags.seen[d.id]=true;delete flags.cancel[d.id];LS.set(flagsKey(),flags);delete sel[d.id]}
+  lastRaw='';polling=false;await poll();renderVote()}
+ catch(e){toast('Voto non inviato: '+e.message)}}
+
+/* ---------- assegna un nome ---------- */
+function renderName(){
+ const ds=dlist(),mine=myDish();
+ let h='<div class="top"><span>👤 <b>'+esc(me.name)+'</b></span><button class="lnk" id="back">← Torna alle votazioni</button></div><h2>✍️ Assegna un nome al piatto</h2>'+
+ '<div class="info">Trova il <b>tuo</b> piatto, dagli un nome e salva. Puoi nominare un solo piatto.'+(mine?'<br>Il tuo è il n° '+mine.num+'.':'')+'</div>';
+ if(!ds.length)h+='<div class="card" style="text-align:center">⏳ Nessun piatto caricato.</div>';
+ h+=ds.map(d=>{
+  const isMine=d.owner===me.id,taken=d.owner&&!isMine,open=draft.open===d.id;
+  let b='<div class="card"'+(isMine?' style="border-color:var(--ok)"':'')+'><span class="num">Piatto n° '+d.num+'</span>'+(isMine?' <span class="num" style="background:var(--ok)">il tuo</span>':'')+
+   '<img class="img" alt="Foto del piatto n° '+d.num+'" style="margin-top:.5rem;max-height:30vh" src="'+esc(imgSrc(d))+'">';
+  if(taken)b+='<div class="hint">🔒 Già assegnato: «'+esc(d.name)+'»</div>';
+  else if(open||isMine){
+   b+='<label>Nome del piatto</label><input maxlength="60" class="nin" data-id="'+esc(d.id)+'" value="'+esc(draft[d.id]!=null?draft[d.id]:d.name)+'" placeholder="Es. Lasagne della nonna"><button class="btn" data-save="'+esc(d.id)+'">💾 Salva</button>'}
+  else b+='<button class="btn ghost" data-open="'+esc(d.id)+'">È il mio piatto</button>';
+  return b+'</div>'}).join('');
+ $('#app').innerHTML=h;
+ $('#back').onclick=()=>{page='vote';renderVote()};
+ document.querySelectorAll('[data-open]').forEach(b=>b.onclick=async()=>{
+  if(myDish())return alertBox('⛔ Hai già assegnato il piatto n° '+myDish().num+'. Si può nominare un solo piatto.');
+  draft.open=b.dataset.open;renderName()});
+ document.querySelectorAll('.nin').forEach(i=>i.oninput=()=>{draft[i.dataset.id]=i.value});
+ document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>saveName(b.dataset.save))}
+async function saveName(id){
+ const d=S.dishes[id];if(!d)return;
+ const el=document.querySelector('.nin[data-id="'+id+'"]'),name=(el?el.value:'').trim().replace(/\s+/g,' ');
+ if(!name)return toast('Scrivi un nome per il piatto');
+ const mine=myDish();
+ if(mine&&mine.id!==id)return alertBox('⛔ Hai già assegnato il piatto n° '+mine.num+'. Si può nominare un solo piatto.');
+ try{
+  if(!mine){const okc=await DB.setIfAbsent('core/dishes/'+id+'/owner',me.id);
+   if(!okc){await alertBox('⛔ Questo piatto è già stato assegnato a qualcun altro.');draft.open=null;lastRaw='';polling=false;await poll();return renderName()}}
+  await DB.set('core/dishes/'+id+'/name',name);
+  delete draft[id];draft.open=null;toast('Nome salvato ✅');lastRaw='';polling=false;await poll();renderName()}
+ catch(e){toast('Salvataggio non riuscito: '+e.message)}}
+
+/* ---------- avvio ---------- */
+(function(){
+ const p=new URLSearchParams(location.search),saved=LS.get('ps_vcfg',{session:'',url:''});
+ cfg={session:p.get('s')||saved.session||'',url:p.has('db')?p.get('db'):(p.get('s')?'':saved.url||'')};
+ const m=LS.get('ps_me',null);
+ if(m&&m.session===cleanSession(cfg.session)&&m.url===cleanUrl(cfg.url)){me=m;enter();return}
+ renderLogin({session:cfg.session,url:cfg.url,name:m?m.name:''})})();
+</script>
+</body>
+</html>

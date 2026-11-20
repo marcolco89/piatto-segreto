@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Piatto Segreto – Dashboard</title>
+<style>
+:root{--bg1:#2a0a1b;--bg2:#5b1432;--gold:#ffd166;--gold2:#f4a261;--cream:#fff4e0;--card:rgba(255,255,255,.09);--line:rgba(255,209,102,.35);--ok:#5fd68a;--bad:#ff6b6b}
+*{box-sizing:border-box}
+html{font-size:clamp(14px,1.25vw,28px)}
+body{margin:0;min-height:100vh;color:var(--cream);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 15% 10%,#8a1f4a 0,transparent 45%),radial-gradient(circle at 90% 90%,#7a3a0e 0,transparent 40%),linear-gradient(160deg,var(--bg1),var(--bg2));background-attachment:fixed}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;margin:.2em 0;color:var(--gold)}
+h1{font-size:4.2rem;letter-spacing:.04em;text-shadow:0 .08em .3em rgba(0,0,0,.5)}
+h2{font-size:2.2rem}h3{font-size:1.4rem}
+#top{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:.4rem .8rem;z-index:5;pointer-events:none}
+#top *{pointer-events:auto}
+#top .garland{font-size:1.2rem;letter-spacing:.4em;opacity:.8}
+#conn{font-size:.75rem;padding:.2rem .6rem;border-radius:1rem;background:rgba(0,0,0,.35)}
+#app{max-width:78rem;margin:0 auto;padding:3rem 1.2rem 3rem;text-align:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:1.2rem;padding:1.2rem 1.5rem;margin:1rem auto;backdrop-filter:blur(4px);text-align:left}
+.btn{font:inherit;font-weight:700;font-size:1.15rem;cursor:pointer;border:0;border-radius:3rem;padding:.7em 1.6em;margin:.3rem;color:#3a1200;background:linear-gradient(180deg,var(--gold),var(--gold2));box-shadow:0 .25rem 0 #b3651f,0 .5rem 1rem rgba(0,0,0,.35);transition:transform .1s}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(2px)}
+.btn:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.btn.ghost{background:rgba(255,255,255,.12);color:var(--cream);box-shadow:none;border:1px solid var(--line)}
+.btn.red{background:linear-gradient(180deg,#ff8a8a,#d94a4a);color:#fff;box-shadow:0 .25rem 0 #8f2323}
+.btn.small{font-size:.85rem;padding:.4em 1em}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+input[type=text],input[type=number],input[type=url],input[type=file]{font:inherit;width:100%;padding:.55em .8em;border-radius:.6rem;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--cream)}
+label{display:block;margin:.6rem 0 .2rem;font-size:.9rem;color:var(--gold)}
+.logo{width:9rem;height:9rem;margin:1rem auto 0;filter:drop-shadow(0 .3rem .6rem rgba(0,0,0,.5));animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-.5rem) rotate(-3deg)}}
+.sub{font-size:1.6rem;opacity:.9;margin:.2rem 0 1.4rem}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:.6rem;margin:1rem 0}
+.chip{background:rgba(255,255,255,.14);border:1px solid var(--line);border-radius:3rem;padding:.4em 1.1em;font-size:1.3rem;animation:pop .4s}
+@keyframes pop{from{transform:scale(.3);opacity:0}}
+.wait{font-size:1.5rem;opacity:.85;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.dishimg{width:100%;max-height:58vh;object-fit:contain;border-radius:1.2rem;background:rgba(0,0,0,.3);border:3px solid var(--gold);box-shadow:0 .5rem 2rem rgba(0,0,0,.5)}
+.num{display:inline-block;background:var(--gold);color:#3a1200;font-weight:800;font-size:1.6rem;border-radius:3rem;padding:.1em .8em;font-family:Georgia,serif}
+.dishname{font-size:3rem;margin:.3rem 0;font-family:Georgia,serif;color:#fff}
+.bar{height:1.4rem;border-radius:1rem;background:rgba(0,0,0,.4);overflow:hidden;max-width:36rem;margin:.6rem auto;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width .6s}
+.big{font-size:1.6rem}
+.okmsg{font-size:2rem;color:var(--ok);font-weight:700;margin:.5rem}
+.alert{background:rgba(255,80,80,.18);border:2px solid var(--bad);color:#ffd6d6;border-radius:1rem;padding:.9rem 1.2rem;font-size:1.3rem;max-width:44rem;margin:.8rem auto}
+.note{background:rgba(255,209,102,.15);border:1px solid var(--gold);border-radius:.8rem;padding:.6rem .9rem;font-size:.9rem;margin:.6rem 0}
+.rank{max-width:40rem;margin:1rem auto;text-align:left}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:.5rem 1rem;margin:.3rem 0;border-radius:.8rem;background:rgba(255,255,255,.08);font-size:1.4rem}
+.rrow.hl{background:linear-gradient(90deg,rgba(255,209,102,.4),rgba(255,209,102,.12));border:1px solid var(--gold);font-weight:700}
+.rrow b{color:var(--gold)}
+.hide{font-size:1.6rem;padding:1.4rem;border:2px dashed var(--line);border-radius:1rem;max-width:36rem;margin:1rem auto}
+.mystery{font-size:3rem;padding:1.2rem;border:3px dashed var(--gold);border-radius:1.2rem;max-width:30rem;margin:1rem auto;background:rgba(0,0,0,.25)}
+.shake{animation:shake .12s infinite}
+@keyframes shake{25%{transform:translate(-4px,2px) rotate(-1deg)}75%{transform:translate(4px,-2px) rotate(1deg)}}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.8rem;text-align:left}
+.rcard{background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:1rem;padding:.7rem;animation:pop .6s}
+.rcard img{width:100%;height:9rem;object-fit:cover;border-radius:.7rem;margin-bottom:.4rem;background:rgba(0,0,0,.3)}
+.rauthor{font:1.5rem Georgia,serif;color:var(--gold);margin:.2rem 0}
+.rsmall{font-size:.9rem;opacity:.9}
+.frow{display:flex;align-items:center;gap:1rem;max-width:46rem;margin:.5rem auto;padding:.7rem 1.2rem;border-radius:1rem;font-size:1.7rem;text-align:left;background:rgba(255,255,255,.07);border:1px dashed var(--line);min-height:3.6rem}
+.frow .pos{font-family:Georgia,serif;font-size:2rem;width:3.4rem;color:var(--gold)}
+.frow .fname{flex:1}.frow .tot{font-weight:800;color:var(--gold);font-size:2rem}
+.frow small{display:block;font-size:.8rem;opacity:.75}
+.frow.show{border-style:solid;background:rgba(255,255,255,.14);animation:slide .7s cubic-bezier(.2,1.4,.4,1)}
+@keyframes slide{from{transform:translateX(-60%) scale(.7);opacity:0}}
+.frow.winner{font-size:2.6rem;padding:1.2rem 1.6rem;background:linear-gradient(90deg,#ffd166,#f4a261);color:#3a1200;border:3px solid #fff;box-shadow:0 0 3rem rgba(255,209,102,.9);animation:win 1.2s ease-out}
+.frow.winner .pos,.frow.winner .tot{color:#3a1200}
+@keyframes win{0%{transform:scale(.2) rotate(-8deg);opacity:0}60%{transform:scale(1.12) rotate(2deg)}100%{transform:scale(1)}}
+.banner{font-size:3.2rem;font-family:Georgia,serif;color:var(--gold);animation:pulse .8s infinite}
+.conf{position:fixed;top:-2rem;width:.7rem;height:1.1rem;z-index:50;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.row>.grow{flex:1;min-width:10rem}
+.item{display:flex;align-items:center;gap:.8rem;padding:.5rem .7rem;margin:.3rem 0;border-radius:.7rem;background:rgba(0,0,0,.25)}
+.item img{width:3.6rem;height:3.6rem;object-fit:cover;border-radius:.5rem}
+.item .grow{flex:1}
+.tag{font-size:.8rem;padding:.15em .7em;border-radius:1rem;background:rgba(255,255,255,.15)}
+.tag.ok{background:rgba(95,214,138,.3);color:#b8ffd0}.tag.bad{background:rgba(255,90,90,.3);color:#ffd0d0}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:.4rem 1.2rem}
+.sgrid label{font-size:.85rem}
+.chk{display:flex;align-items:center;gap:.6rem;margin:.8rem 0;font-size:1rem;color:var(--cream)}
+.chk input{width:1.3rem;height:1.3rem}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:60}
+#modal.on{display:flex}
+.mbox{background:#3b0f25;border:2px solid var(--gold);border-radius:1.2rem;padding:1.5rem 2rem;max-width:34rem;font-size:1.2rem;white-space:pre-line}
+#toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:.7rem 1.4rem;border-radius:2rem;z-index:70;display:none;font-size:1rem;max-width:90vw}
+.rules li{margin:.5rem 0;font-size:1.25rem}
+.pv{max-width:12rem;max-height:9rem;border-radius:.5rem;margin-top:.4rem}
+@media(max-width:700px){html{font-size:15px}h1{font-size:2.6rem}.dishname{font-size:2rem}.frow{font-size:1.2rem}.frow.winner{font-size:1.6rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header id="top"><span class="garland" aria-hidden="true">🎉🍝🍕🥗🍰🍷🎉</span><span id="conn">…</span></header>
+<main id="app"></main>
+<div id="modal" role="dialog" aria-modal="true"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+/* ---------- utilità ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const uid=p=>p+Math.random().toString(36).slice(2,9);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+ set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){toast('Memoria del browser piena: usa Firebase o immagini più piccole');return false}}};
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',3500)}
+function ask(msg,ok){return new Promise(res=>{const m=$('#modal');
+ m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p><div class="row" style="justify-content:flex-end"><button class="btn ghost" id="mNo">Annulla</button><button class="btn" id="mYes">'+esc(ok||'Conferma')+'</button></div></div>';
+ m.classList.add('on');const close=v=>{m.classList.remove('on');m.innerHTML='';res(v)};
+ $('#mYes').onclick=()=>close(true);$('#mNo').onclick=()=>close(false);$('#mYes').focus()})}
+function cleanSession(s){return String(s||'').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'')||'serata'}
+function cleanUrl(u){
+ u=String(u||'').trim().replace(/\/+$/,'');
+ if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
+ return u}
+
+/* ---------- impostazioni punteggio ---------- */
+const PARTNER='__partner__';           /* valore speciale del voto "piatto del mio partner" (voto nullo) */
+const DEF={guess:1,wrong:0,bonus:3,none:5,one:3,less:2,maj:1,all:0,hidden:3,partner:true};
+function SET(){
+ const s=Object.assign({},DEF,(S&&S.settings)||{}),o={};
+ for(const k of Object.keys(DEF)){
+  if(k==='partner')o[k]=s[k]!==false;
+  else{const n=Number(s[k]);o[k]=Number.isFinite(n)?Math.round(n):DEF[k]}}
+ o.hidden=Math.max(0,Math.min(50,o.hidden));return o}
+const sg=n=>(n>0?'+':'')+n;  /* numero con segno */
+
+/* ---------- audio / coriandoli ---------- */
+let AC;function ac(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.resume)AC.resume()}catch(e){}return AC}
+function tone(f,d,t,v,when){const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain(),s=a.currentTime+(when||0);
+ o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(v||.2,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(a.destination);o.start(s);o.stop(s+d)}
+function drum(ms){const n=Math.floor(ms/55);for(let i=0;i<n;i++)tone(80+Math.random()*30,.09,'triangle',.12+.3*i/n,i*.055);tone(330,.6,'sawtooth',.18,ms/1000)}
+function ding(){tone(660,.3,'sine',.2);tone(880,.4,'sine',.2,.12)}
+function fanfare(){[523,659,784,1046,784,1046].forEach((f,i)=>tone(f,.35,'square',.12,i*.18))}
+function confetti(n){const cols=['#ffd166','#ef476f','#06d6a0','#118ab2','#f4a261','#fff'];
+ for(let i=0;i<n;i++){const d=document.createElement('div');d.className='conf';d.style.left=Math.random()*100+'vw';d.style.background=cols[i%cols.length];
+ d.style.animationDuration=(2.5+Math.random()*3)+'s';d.style.animationDelay=Math.random()*.8+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),6500)}}
+
+/* ---------- database (Firebase REST o locale) ---------- */
+const cfg=Object.assign({session:'serata',url:'',votUrl:''},LS.get('ps_dcfg',{}));
+const DB={
+ local(){return !cfg.url},
+ root(){return cleanUrl(cfg.url)+'/piatto/'+cleanSession(cfg.session)},
+ lkey(){return 'ps_local_'+cleanSession(cfg.session)},
+ u(path){return this.root()+(path?'/'+path:'')+'.json'},
+ async get(path){
+  if(this.local()){let n=LS.get(this.lkey(),{});for(const p of path.split('/').filter(Boolean)){if(n==null||typeof n!=='object')return null;n=n[p]}return n==null?null:n}
+  const r=await fetch(this.u(path),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},
+ async set(path,val){
+  if(this.local()){const parts=path.split('/').filter(Boolean);let t=LS.get(this.lkey(),{}),n=t;
+   if(!parts.length){t=val||{}}else{for(let i=0;i<parts.length-1;i++){if(n[parts[i]]==null||typeof n[parts[i]]!=='object')n[parts[i]]={};n=n[parts[i]]}
+    if(val===null)delete n[parts[parts.length-1]];else n[parts[parts.length-1]]=val}
+   if(!LS.set(this.lkey(),t))throw new Error('memoria piena');return}
+  const r=await fetch(this.u(path),val===null?{method:'DELETE'}:{method:'PUT',body:JSON.stringify(val)});if(!r.ok)throw new Error('HTTP '+r.status)},
+ del(path){return this.set(path,null)}
+};
+
+/* ---------- stato ---------- */
+let S={participants:{},dishes:{},votes:{},state:{},settings:{}},lastRaw='',polling=false;
+const IMG={};
+let view='home',dishId=null,revealed=false,runId=0,editing=null,pendingImg=null;
+
+function plist(){return Object.entries(S.participants).map(([id,p])=>({id,name:(p&&p.name)||'?',t:(p&&p.t)||0})).sort((a,b)=>a.t-b.t)}
+function dlist(){return Object.entries(S.dishes).map(([id,d])=>({id,num:Number(d.num)||0,name:d.name||'',owner:d.owner||'',v:d.v})).sort((a,b)=>a.num-b.num)}
+const dname=d=>d.name||'(senza nome)';
+const pname=id=>S.participants[id]?S.participants[id].name:'(rimosso)';
+
+async function poll(){
+ if(polling)return;polling=true;
+ try{const c=(await DB.get('core'))||{};setConn(true);const raw=JSON.stringify(c);
+  if(raw!==lastRaw){lastRaw=raw;S={participants:c.participants||{},dishes:c.dishes||{},votes:c.votes||{},state:c.state||{},settings:c.settings||{}};onData()}}
+ catch(e){setConn(false)}
+ polling=false}
+function setConn(ok){const e=$('#conn');e.textContent=(DB.local()?'💾 Locale · ':'☁️ Firebase · ')+cleanSession(cfg.session)+(ok?'':' · ⚠️ offline');e.style.color=ok?'':'#ffb4b4'}
+async function W(fn){try{await fn();polling=false;lastRaw='';await poll()}catch(e){toast('Errore di scrittura: '+e.message)}}
+setInterval(poll,2000);
+
+/* ---------- logica di gioco ---------- */
+function analyze(d){
+ const ps=S.participants,ids=Object.keys(ps),N=ids.length,raw=S.votes[d]||{},votes={};
+ ids.forEach(i=>{const t=raw[i];if(t&&(t===PARTNER||ps[t]))votes[i]=t});
+ const v=Object.keys(votes).length,selfs=ids.filter(i=>votes[i]===i);
+ let status='progress';if(N>=2&&v>=N)status=selfs.length===1?'ok':selfs.length===0?'none':'multi';
+ return{N,v,votes,selfCount:selfs.length,status,author:status==='ok'?selfs[0]:null}}
+function scoreDish(d){
+ const a=analyze(d);if(a.status!=='ok')return null;const st=SET();
+ const others=Object.keys(a.votes).filter(i=>i!==a.author);
+ const partners=others.filter(i=>a.votes[i]===PARTNER);           /* voti nulli */
+ const guessers=others.filter(i=>a.votes[i]===a.author);
+ const wrongs=others.filter(i=>a.votes[i]!==a.author&&a.votes[i]!==PARTNER);
+ const k=guessers.length,E=others.length-partners.length;          /* E = votanti validi */
+ let ap;
+ if(E===0)ap=0;
+ else if(k===0)ap=st.none;
+ else if(k===E)ap=st.all;
+ else if(k===1)ap=st.one;
+ else if(k<E/2)ap=st.less;
+ else ap=st.maj;
+ return{author:a.author,guessers,wrongs,partners,k,authorPts:ap,possible:E}}
+/* punti indovino cumulati sui piatti indicati */
+function guessPoints(list){const st=SET(),m={};plist().forEach(p=>m[p.id]=0);
+ list.forEach(d=>{const s=scoreDish(d.id);if(!s)return;
+  s.guessers.forEach(g=>{if(g in m)m[g]+=st.guess});
+  s.wrongs.forEach(w=>{if(w in m)m[w]+=st.wrong})});return m}
+function finalTotals(){
+ const st=SET(),ps=plist(),A={},G={},GP={};ps.forEach(p=>{A[p.id]=0;G[p.id]=0;GP[p.id]=0});
+ dlist().forEach(d=>{const s=scoreDish(d.id);if(!s)return;if(s.author in A)A[s.author]+=s.authorPts;
+  s.guessers.forEach(g=>{if(g in G){G[g]++;GP[g]+=st.guess}});
+  s.wrongs.forEach(w=>{if(w in GP)GP[w]+=st.wrong})});
+ const max=Math.max(0,...Object.values(G));
+ const rows=ps.map(p=>{const b=(max>0&&G[p.id]===max)?st.bonus:0;return{id:p.id,name:p.name,a:A[p.id],g:G[p.id],gp:GP[p.id],b,tot:A[p.id]+GP[p.id]+b}});
+ rows.sort((x,y)=>y.tot-x.tot||x.name.localeCompare(y.name));
+ rows.forEach((r,i)=>r.pos=(i>0&&r.tot===rows[i-1].tot)?rows[i-1].pos:i+1);return rows}
+
+/* ---------- immagini ---------- */
+async function getImg(id){const d=S.dishes[id];if(!d)return null;const c=IMG[id];if(c&&c.v===d.v)return c.data;
+ try{const r=await DB.get('img/'+id);const data=(r&&r.data)||'';IMG[id]={v:d.v,data};return data}catch(e){return null}}
+function hydrate(root){(root||document).querySelectorAll('img[data-dish]').forEach(async el=>{const x=await getImg(el.dataset.dish);if(x&&el.isConnected)el.src=x})}
+function resizeImg(file,max,q){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{
+ const s=Math.min(1,max/Math.max(im.width,im.height)),w=Math.round(im.width*s),h=Math.round(im.height*s),c=document.createElement('canvas');c.width=w;c.height=h;
+ const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);res(c.toDataURL('image/jpeg',q))};im.onerror=rej;im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(file)})}
+
+/* ---------- navigazione ---------- */
+function go(v,d){
+ view=v;dishId=d||null;runId++;
+ if(['home','dish','result','reveal','final'].includes(v))DB.set('core/state',{view:v,dishId:dishId,rev:Date.now()}).catch(()=>{});
+ render();window.scrollTo(0,0)}
+function render(){
+ ({home:rHome,rules:rRules,settings:rSettings,regia:rRegia,dish:rDish,result:rResult,revcheck:rRevCheck,reveal:rReveal,final:rFinal})[view]();
+ hydrate()}
+function onData(){
+ if((view==='dish'||view==='result')&&!S.dishes[dishId]){go('home');return}
+ if(view==='home')rHome();else if(view==='regia')rRegiaLists();else if(view==='dish')updDish();else if(view==='result')rResult();else if(view==='rules')rRules();
+ hydrate()}
+
+const LOGO='<svg class="logo" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="56" fill="#ffd166" stroke="#fff" stroke-width="4"/><circle cx="60" cy="68" r="38" fill="#fff4e0"/><path d="M18 74a42 42 0 0 1 84 0z" fill="#d9d9e3" stroke="#8a8aa0" stroke-width="3"/><circle cx="60" cy="30" r="6" fill="#8a8aa0"/><rect x="14" y="74" width="92" height="7" rx="3" fill="#8a8aa0"/><text x="60" y="63" font-size="30" text-anchor="middle" fill="#b3282d" font-family="Georgia" font-weight="bold">?</text></svg>';
+
+/* ---------- Home ---------- */
+function rHome(){
+ const ps=plist();
+ if(!$('#hp')){$('#app').innerHTML=LOGO+'<h1>Piatto Segreto</h1><div class="sub">Chi ha cucinato cosa? Assaggia, indovina, depista!</div><div id="hp"></div>'+
+  '<div style="margin-top:1.5rem"><button class="btn" data-a="start">🍽️ Inizia la serata</button><button class="btn ghost" data-a="rules">📖 Regole</button><button class="btn ghost" data-a="regia">⚙️ Regia</button><button class="btn ghost" data-a="settings">🎚️ Impostazioni</button></div>'}
+ $('#hp').innerHTML=ps.length?'<div class="big">Ci siamo già in <b>'+ps.length+'</b>:</div><div class="chips">'+ps.map(p=>'<span class="chip">'+esc(p.name)+'</span>').join('')+'</div>':
+  '<div class="wait">⏳ In attesa dei partecipanti… scrivi il tuo nome dalla pagina votazioni!</div>'}
+function rRules(){
+ const st=SET();
+ $('#app').innerHTML='<h2>📖 Le regole</h2><div class="card rules"><ul>'+
+ '<li>Ognuno porta di nascosto un piatto. I piatti vengono serviti uno alla volta.</li>'+
+ '<li>Dal cellulare vota <b>chi ha preparato</b> ogni piatto. Se il piatto è tuo, <b>vota te stesso</b>: non dà punti, serve solo a sapere di chi è.</li>'+
+ (st.partner?'<li><b>Coppie conviventi:</b> se riconosci il piatto del tuo partner scegli «💑 È il piatto del mio partner». Il voto è <b>nullo</b>: non dà punti a te e non conta per l\'autore. Si può usare una sola volta.</li>':'')+
+ '<li><b>Indovino:</b> '+sg(st.guess)+' per ogni piatto attribuito alla persona giusta'+(st.wrong?', '+sg(st.wrong)+' per ogni voto sbagliato':'')+'. A fine gioco '+sg(st.bonus)+' a chi ne ha indovinati di più (pari merito: a tutti).</li>'+
+ '<li><b>Autore</b> (in base a quanti indovinano il suo piatto, esclusi i voti nulli): nessuno '+sg(st.none)+' · una persona '+sg(st.one)+' · meno della metà '+sg(st.less)+' · la maggioranza (anche esattamente metà) fino a tutti tranne uno '+sg(st.maj)+' · tutti '+sg(st.all)+'.</li>'+
+ '<li>Dopo il voto il piatto è definitivo. Gli autori e la classifica si scoprono solo alla fine!</li></ul></div>'+
+ '<button class="btn" data-a="home">← Indietro</button>'}
+
+/* ---------- Impostazioni ---------- */
+function rSettings(){
+ const st=SET();
+ const f=(k,l)=>'<div><label for="s_'+k+'">'+l+'</label><input type="number" step="1" id="s_'+k+'" value="'+st[k]+'"></div>';
+ $('#app').innerHTML='<h2>🎚️ Impostazioni punteggio</h2>'+
+ '<div class="card"><h3>Indovino</h3><div class="sgrid">'+f('guess','Punti per piatto indovinato')+f('wrong','Punti per voto sbagliato (negativo = malus)')+f('bonus','Bonus miglior indovino')+'</div></div>'+
+ '<div class="card"><h3>Autore (depistaggio)</h3><div class="sgrid">'+f('none','Nessuno indovina')+f('one','Indovina una sola persona')+f('less','Indovinano meno della metà')+f('maj','Metà o più, ma non tutti')+f('all','Indovinano tutti')+'</div>'+
+ '<div class="note">Valori negativi = malus. Il calcolo considera solo i votanti validi (esclusi autore e voti «partner»). Se un solo votante è valido e indovina, vale «Indovinano tutti».</div></div>'+
+ '<div class="card"><h3>Gioco</h3><div class="sgrid">'+f('hidden','Ultimi piatti con classifica nascosta')+'</div>'+
+ '<label class="chk"><input type="checkbox" id="s_partner"'+(st.partner?' checked':'')+'> Consenti il voto «💑 È il piatto del mio partner» (voto nullo)</label></div>'+
+ '<div class="note">Le modifiche valgono anche per i piatti già votati: punteggi e classifiche vengono ricalcolati.</div>'+
+ '<button class="btn" data-a="savesettings">💾 Salva impostazioni</button><button class="btn ghost" data-a="defsettings">↺ Valori predefiniti</button><button class="btn ghost" data-a="home">← Torna alla home</button>'}
+async function saveSettings(def){
+ let o;
+ if(def)o=Object.assign({},DEF);
+ else{o={};for(const k of Object.keys(DEF)){
+   if(k==='partner'){o[k]=$('#s_partner').checked;continue}
+   const n=Number($('#s_'+k).value);
+   if($('#s_'+k).value.trim()===''||!Number.isFinite(n))return toast('Valore non valido: '+k);
+   o[k]=Math.round(n)}
+  if(o.hidden<0||o.hidden>50)return toast('Classifica nascosta: valore tra 0 e 50')}
+ await W(()=>DB.set('core/settings',o));toast('Impostazioni salvate ✅');if(view==='settings')rSettings()}
+
+/* ---------- Pagina piatto ---------- */
+function dishHead(d){return '<div><span class="num">Piatto n° '+d.num+'</span></div><img class="dishimg" data-dish="'+esc(d.id)+'" alt="Foto del piatto n° '+d.num+'">'+(d.name?'<div class="dishname">'+esc(d.name)+'</div>':'')}
+function rDish(){
+ const d=dlist().find(x=>x.id===dishId);if(!d){go('home');return}
+ $('#app').innerHTML=dishHead(d)+'<div id="dst"></div>';updDish()}
+function updDish(){
+ const a=analyze(dishId),el=$('#dst');if(!el)return;
+ let h='<div class="big">'+a.v+' voti su '+a.N+'</div><div class="bar"><i style="width:'+(a.N?Math.min(100,a.v/a.N*100):0)+'%"></i></div>';
+ if(a.status==='progress')h+='<div class="wait">'+(a.N<2?'Servono almeno 2 partecipanti':'Votate dal cellulare…')+'</div>';
+ else if(a.status==='ok')h+='<div class="okmsg">✅ Tutti hanno votato</div><button class="btn" data-a="result">📊 Esito votazione</button>';
+ else if(a.status==='none')h+='<div class="alert">⚠️ Nessuno ha votato sé stesso. Chi ha preparato il piatto deve votare per sé stesso: bisogna rivotare.</div><button class="btn red" data-a="revote" data-id="'+esc(dishId)+'">🔄 Rivota questo piatto</button>';
+ else h+='<div class="alert">⚠️ '+a.selfCount+' persone hanno votato sé stesse. Un piatto ha un solo autore: bisogna rivotare.</div><button class="btn red" data-a="revote" data-id="'+esc(dishId)+'">🔄 Rivota questo piatto</button>';
+ el.innerHTML=h}
+async function revote(id){
+ if(!await ask('Cancellare tutti i voti di questo piatto? I cellulari potranno rivotare.','Sì, rivota'))return;
+ W(()=>DB.del('core/votes/'+id))}
+
+/* ---------- Esito ---------- */
+function rResult(){
+ const st=SET(),ds=dlist(),idx=ds.findIndex(x=>x.id===dishId),d=ds[idx];if(!d){go('home');return}
+ const s=scoreDish(d.id);
+ if(!s){$('#app').innerHTML='<div class="alert">Autore del piatto non ancora valido.</div><button class="btn" data-a="show" data-id="'+esc(d.id)+'">← Torna al piatto</button>';return}
+ const last=idx===ds.length-1,hidden=st.hidden>0&&idx>=ds.length-st.hidden;
+ /* i voti «partner» NON vengono mostrati qui: rivelerebbero l'autore. Si vedono solo nello svelamento finale. */
+ let h='<h2>📊 Esito – Piatto n° '+d.num+(d.name?': '+esc(d.name):'')+'</h2><div class="big" style="font-size:2.4rem;margin:.6rem">Risposte giuste: <b style="color:var(--gold)">'+s.k+'</b></div>';
+ h+=s.k?'<div class="chips">'+s.guessers.map(g=>'<span class="chip">'+esc(pname(g))+' <b style="color:var(--gold)">'+sg(st.guess)+'</b></span>').join('')+'</div>':'<div class="big">🕵️ Nessuno ha indovinato!</div>';
+ if(hidden)h+='<div class="hide">🤫 <b>Classifica nascosta</b><br>Siamo agli ultimi piatti: la suspense cresce!</div>';
+ else{const gp=guessPoints(ds.slice(0,idx+1)),hl=new Set(s.guessers);
+  const rows=plist().map(p=>({id:p.id,name:p.name,pt:gp[p.id]})).sort((x,y)=>y.pt-x.pt||x.name.localeCompare(y.name));
+  h+='<h3>Classifica parziale (punti indovino)</h3><div class="rank">'+rows.map(r=>'<div class="rrow'+(hl.has(r.id)?' hl':'')+'"><span>'+esc(r.name)+(hl.has(r.id)?' ⭐':'')+'</span><b>'+r.pt+'</b></div>').join('')+'</div>'}
+ h+=last?'<button class="btn" data-a="revstart">🔎 Svela gli autori</button>':'<button class="btn" data-a="next">➡️ Prossimo piatto</button>';
+ $('#app').innerHTML=h}
+
+/* ---------- Rivelazione ---------- */
+function bad(){return dlist().filter(d=>analyze(d.id).status!=='ok')}
+function revStart(){const b=bad();if(b.length||!dlist().length){view='revcheck';render();return}revealed=false;go('reveal')}
+function rRevCheck(){
+ const b=bad();
+ $('#app').innerHTML='<h2>⛔ Impossibile svelare gli autori</h2><div class="alert">'+(b.length?'Questi piatti non hanno un autore valido e vanno fatti rivotare:':'Non ci sono piatti.')+'</div>'+
+ b.map(d=>{const a=analyze(d.id);return '<div class="card item"><span class="num">'+d.num+'</span><span class="grow">'+esc(dname(d))+' <span class="tag bad">'+(a.status==='progress'?'voti incompleti ('+a.v+'/'+a.N+')':a.status==='none'?'nessun autore':a.selfCount+' autori')+'</span></span><button class="btn small" data-a="show" data-id="'+esc(d.id)+'">Mostra</button><button class="btn small red" data-a="revote" data-id="'+esc(d.id)+'">🔄 Rivota</button></div>'}).join('')+
+ '<button class="btn ghost" data-a="revstart">Ricontrolla</button><button class="btn ghost" data-a="regia">⚙️ Regia</button>'}
+function rReveal(){
+ $('#app').innerHTML='<h2 style="font-size:2.6rem">🔎 Chi ha cucinato cosa?</h2><div id="rv"></div><div id="rvBtnBox"><div class="mystery" id="myst">❓ Autori misteriosi ❓</div><button class="btn" id="rvBtn" data-a="reveal">🥁 Svela tutti gli autori</button></div>'+
+ '<div id="rvNav" style="display:none"><button class="btn" data-a="final">🏆 Vai alla classifica</button></div>';
+ if(revealed)showAll()}
+function showAll(){
+ $('#rv').innerHTML='<div class="rgrid">'+dlist().map(d=>{const s=scoreDish(d.id);if(!s)return'';
+  return '<div class="rcard"><img data-dish="'+esc(d.id)+'" alt="Foto del piatto n° '+d.num+'"><div><span class="num" style="font-size:1rem">n° '+d.num+'</span> <b>'+esc(dname(d))+'</b></div>'+
+  '<div class="rauthor">👨‍🍳 '+esc(pname(s.author))+'</div>'+
+  '<div class="rsmall">Indovinato da: '+(s.k?s.guessers.map(g=>esc(pname(g))).join(', '):'<b>nessuno!</b>')+'</div>'+
+  (s.partners.length?'<div class="rsmall">💑 Voto nullo (partner): '+s.partners.map(g=>esc(pname(g))).join(', ')+'</div>':'')+
+  '<div class="rsmall">Depistaggio: <b style="color:var(--gold)">'+sg(s.authorPts)+'</b></div></div>'}).join('')+'</div>';
+ $('#rvBtnBox').style.display='none';$('#rvNav').style.display='';hydrate()}
+async function doReveal(){
+ const my=runId;$('#rvBtn').disabled=true;$('#myst').classList.add('shake');drum(2000);await sleep(2000);
+ if(my!==runId)return;revealed=true;ding();confetti(60);showAll()}
+
+/* ---------- Classifica finale ---------- */
+function rFinal(){
+ const rows=finalTotals();
+ $('#app').innerHTML='<h2 style="font-size:3rem">🏆 Classifica finale</h2><div id="fl">'+rows.map((r,i)=>'<div class="frow" id="fr'+i+'"><span class="pos">?</span><span class="fname">• • •</span></div>').join('')+'</div>'+
+ '<button class="btn" id="susp" data-a="suspense">🎬 Avvia la suspense</button><div><button class="btn ghost small" data-a="home">Torna alla home</button></div>'}
+function fillRow(i,r,cls){
+ const el=$('#fr'+i);if(!el)return;el.className='frow show '+(cls||'');
+ const medal=r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos+'°';
+ el.innerHTML='<span class="pos">'+medal+'</span><span class="fname">'+esc(r.name)+'<small>autore '+r.a+' · indovino '+r.gp+' ('+r.g+' giusti)'+(r.b?' · bonus '+sg(r.b):'')+'</small></span><span class="tot">'+r.tot+'</span>'}
+const focusRow=i=>{const e=$('#fr'+i);if(e)e.scrollIntoView({block:'center',behavior:'smooth'})};
+async function suspense(){
+ const rows=finalTotals(),my=++runId,ok=()=>my===runId&&view==='final',n=rows.length;
+ if(!n)return;
+ $('#susp').disabled=true;
+ const nw=rows.filter(r=>r.pos===1).length;          /* numero di vincitori a pari merito */
+ const keep=nw>1?nw:Math.min(2,n);                     /* righe da svelare alla fine */
+ for(let i=n-1;i>=keep;i--){await sleep(1800);if(!ok())return;tone(300+i*10,.3,'triangle',.25);fillRow(i,rows[i]);focusRow(i)}
+ const el=document.createElement('div');el.className='banner';el.textContent=nw>1?'E i vincitori a pari merito sono...':'E il vincitore è...';$('#fl').before(el);
+ await sleep(1200);if(!ok()){el.remove();return}drum(4000);await sleep(4300);if(!ok()){el.remove();return}
+ el.remove();fanfare();confetti(120);
+ for(let i=0;i<nw;i++)fillRow(i,rows[i],'winner');focusRow(0);
+ if(nw===1&&n>=2){await sleep(3500);if(!ok())return;drum(1200);await sleep(1500);if(!ok())return;ding();fillRow(1,rows[1]);focusRow(1)}
+ await sleep(1500);if(!ok())return;confetti(60)}
+
+/* ---------- Regia ---------- */
+function votLink(){
+ const base=(cfg.votUrl||'').trim()||location.href.split(/[?#]/)[0].replace(/[^\/\\]*$/,'')+'Piatto_Segreto_Votazioni.html';
+ const p=new URLSearchParams();p.set('s',cleanSession(cfg.session));if(cfg.url)p.set('db',cleanUrl(cfg.url));return base+'?'+p.toString()}
+function rRegia(){
+ $('#app').innerHTML='<h2>⚙️ Regia</h2><div class="card" style="text-align:left"><h3>1 · Sessione e collegamento</h3>'+
+ '<label for="cS">Codice sessione</label><input type="text" id="cS" value="'+esc(cfg.session)+'">'+
+ '<label for="cU">URL database Firebase (vuoto = modalità locale per prove sullo stesso dispositivo)</label>'+
+ '<input type="url" id="cU" placeholder="https://xxx-default-rtdb.europe-west1.firebasedatabase.app" value="'+esc(cfg.url)+'">'+
+ '<label for="cV">URL pagina votazioni (per il link; lascia vuoto per usare la cartella di questa pagina)</label>'+
+ '<input type="url" id="cV" placeholder="https://utente.github.io/repo/Piatto_Segreto_Votazioni.html" value="'+esc(cfg.votUrl)+'">'+
+ '<div class="note">💾 La modalità locale funziona solo sullo stesso browser dello stesso dispositivo. Per usare PC e cellulari insieme serve Firebase.</div>'+
+ '<div style="margin-top:.6rem"><button class="btn small" data-a="savecfg">💾 Salva</button><button class="btn small ghost" data-a="copylink">🔗 Copia link votanti</button></div><div id="cmsg" class="tag" style="display:none"></div></div>'+
+ '<div class="card"><h3>2 · Partecipanti</h3><div class="row"><input class="grow" type="text" id="pN" maxlength="30" placeholder="Nome (per chi non ha il telefono)" aria-label="Nome partecipante"><button class="btn small" data-a="addpart">➕ Aggiungi</button></div><div id="rParts"></div></div>'+
+ '<div class="card"><h3>3 · Piatti</h3><div style="width:8rem"><label for="dN">Numero</label><input type="number" id="dN" min="1"></div><div class="tag" style="margin-top:.5rem">Il nome lo assegna l\'autore dal cellulare ("Assegna un nome al piatto")</div>'+
+ '<label for="dF">Immagine (viene ridimensionata e compressa)</label><input type="file" id="dF" accept="image/*"><img class="pv" id="dP" style="display:none" alt="Anteprima">'+
+ '<div style="margin-top:.6rem"><button class="btn small" data-a="savedish" id="dS">➕ Aggiungi piatto</button><button class="btn small ghost" data-a="canceledit" id="dC" style="display:none">Annulla modifica</button></div><div id="rDishes"></div></div>'+
+ '<div class="card"><h3>4 · Strumenti</h3><button class="btn small ghost" data-a="settings">🎚️ Impostazioni punteggio</button><button class="btn small ghost" data-a="resetvotes">🧹 Azzera tutti i voti</button><button class="btn small ghost" data-a="export">⬇️ Esporta backup</button><button class="btn small ghost" data-a="importbtn">⬆️ Importa backup</button><input type="file" id="iF" accept="application/json" style="display:none">'+
+ '<div style="margin-top:.6rem"><button class="btn small" data-a="revstart">🔎 Svela autori e classifica</button></div></div>'+
+ '<button class="btn" data-a="home">← Torna alla home</button>';
+ $('#dF').onchange=async e=>{const f=e.target.files[0];pendingImg=null;$('#dP').style.display='none';if(!f)return;
+  try{pendingImg=await resizeImg(f,800,.72);$('#dP').src=pendingImg;$('#dP').style.display='block'}catch(x){toast('Immagine non leggibile')}};
+ $('#iF').onchange=importJ;editing=null;pendingImg=null;
+ $('#dN').value=nextNum();rRegiaLists()}
+function nextNum(){return dlist().reduce((m,d)=>Math.max(m,d.num),0)+1}
+function rRegiaLists(){
+ if(!$('#rParts'))return;
+ const ps=plist();
+ $('#rParts').innerHTML=ps.length?ps.map(p=>'<div class="item"><span class="grow">'+esc(p.name)+'</span><button class="btn small ghost" data-a="rmpart" data-id="'+esc(p.id)+'">🗑️ Rimuovi</button></div>').join(''):'<div class="wait" style="font-size:1rem">Nessun partecipante</div>';
+ const ds=dlist();
+ $('#rDishes').innerHTML=ds.length?ds.map(d=>{const a=analyze(d.id);
+  const tag=a.status==='ok'?'<span class="tag ok">✅ '+a.v+'/'+a.N+' · autore ok</span>':a.status==='progress'?'<span class="tag">'+a.v+'/'+a.N+' voti</span>':'<span class="tag bad">⚠️ '+(a.status==='none'?'nessun autore':a.selfCount+' autori')+'</span>';
+  const nm=d.name&&d.owner&&S.participants[d.owner]?'<span class="tag ok">✍️ '+esc(d.name)+'</span>':'<span class="tag bad">✍️ da nominare</span>';
+  return '<div class="item"><img data-dish="'+esc(d.id)+'" alt="Piatto n° '+d.num+'"><span class="num">'+d.num+'</span><span class="grow">'+nm+' '+tag+'</span>'+
+  '<button class="btn small" data-a="show" data-id="'+esc(d.id)+'">Mostra</button><button class="btn small ghost" data-a="editdish" data-id="'+esc(d.id)+'" aria-label="Modifica">✏️</button><button class="btn small ghost" data-a="revote" data-id="'+esc(d.id)+'" aria-label="Rivota">🔄</button><button class="btn small ghost" data-a="deldish" data-id="'+esc(d.id)+'" aria-label="Elimina">🗑️</button></div>'}).join(''):'<div class="wait" style="font-size:1rem">Nessun piatto</div>'}
+
+/* ---------- azioni ---------- */
+const A={
+ home(){go('home')},rules(){view='rules';render()},regia(){view='regia';render()},settings(){view='settings';render()},
+ savesettings(){saveSettings(false)},
+ async defsettings(){if(await ask('Ripristinare i punteggi predefiniti?','Ripristina'))saveSettings(true)},
+ start(){if(plist().length<2)return toast('Servono almeno 2 partecipanti');const ds=dlist();if(!ds.length)return toast('Carica almeno un piatto dalla Regia');
+  const miss=ds.filter(d=>!d.name||!d.owner||!S.participants[d.owner]);
+  if(miss.length)return toast('Piatti senza nome/autore: n° '+miss.map(d=>d.num).join(', ')+'. Ognuno deve assegnare il proprio dal cellulare.');
+  go('dish',ds[0].id)},
+ show(d){go('dish',d.id)},result(){go('result',dishId)},
+ next(){const ds=dlist(),i=ds.findIndex(x=>x.id===dishId);if(ds[i+1])go('dish',ds[i+1].id)},
+ revote(d){revote(d.id)},
+ revstart(){revStart()},reveal(){doReveal()},
+ final(){go('final')},suspense(){suspense()},
+ savecfg(){saveCfg()},copylink(){copyLink()},
+ async addpart(){const n=$('#pN').value.trim().replace(/\s+/g,' ');if(!n)return;
+  if(plist().some(p=>p.name.toLowerCase()===n.toLowerCase()))return toast('Nome già presente');
+  await W(()=>DB.set('core/participants/'+uid('p'),{name:n,t:Date.now()}));$('#pN').value=''},
+ async rmpart(d){
+  if(!await ask('Rimuovere '+pname(d.id)+'? Verranno cancellati anche i voti dati da lui e quelli a suo favore; il suo piatto tornerà senza nome/autore.','Rimuovi'))return;
+  W(async()=>{const v=await DB.get('core/votes')||{};
+   for(const dd of Object.keys(v))for(const [voter,tgt] of Object.entries(v[dd]||{}))if(voter===d.id||tgt===d.id)await DB.del('core/votes/'+dd+'/'+voter);
+   for(const [id,x] of Object.entries(S.dishes))if(x.owner===d.id){await DB.del('core/dishes/'+id+'/owner');await DB.del('core/dishes/'+id+'/name')}
+   await DB.del('core/participants/'+d.id)})},
+ savedish(){saveDish()},
+ editdish(d){const x=S.dishes[d.id];if(!x)return;editing=d.id;pendingImg=null;$('#dN').value=x.num;$('#dF').value='';$('#dP').style.display='none';
+  $('#dS').textContent='💾 Salva modifiche';$('#dC').style.display='';$('#dN').scrollIntoView({block:'center'})},
+ canceledit(){editing=null;pendingImg=null;if(!$('#dN'))return;$('#dN').value=nextNum();$('#dF').value='';$('#dP').style.display='none';$('#dS').textContent='➕ Aggiungi piatto';$('#dC').style.display='none'},
+ async deldish(d){if(!await ask('Eliminare il piatto n° '+(S.dishes[d.id]||{}).num+' e i suoi voti?','Elimina'))return;
+  W(async()=>{await DB.del('core/votes/'+d.id);await DB.del('img/'+d.id);await DB.del('core/dishes/'+d.id)})},
+ async resetvotes(){if(!await ask('Azzerare i voti di TUTTI i piatti?','Azzera'))return;W(async()=>{await DB.del('core/votes');toast('Voti azzerati')})},
+ export(){exportJ()},importbtn(){$('#iF').click()}
+};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;ac();const f=A[b.dataset.a];if(f)f(b.dataset)});
+
+async function saveCfg(){
+ cfg.session=cleanSession($('#cS').value);cfg.url=cleanUrl($('#cU').value);cfg.votUrl=$('#cV').value.trim();
+ LS.set('ps_dcfg',cfg);$('#cS').value=cfg.session;$('#cU').value=cfg.url;lastRaw='';S={participants:{},dishes:{},votes:{},state:{},settings:{}};
+ const m=$('#cmsg');m.style.display='inline-block';m.className='tag';m.textContent='Verifica collegamento…';
+ try{await DB.get('core');m.textContent=DB.local()?'✅ Modalità locale attiva':'✅ Firebase raggiunto';m.className='tag ok'}
+ catch(e){m.textContent='⚠️ Collegamento non riuscito ('+e.message+')';m.className='tag bad'}
+ polling=false;await poll()}
+async function copyLink(){
+ await saveCfg();const l=votLink();
+ try{await navigator.clipboard.writeText(l)}catch(e){const t=document.createElement('textarea');t.value=l;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(x){}t.remove()}
+ toast('Link votanti copiato ✅')}
+async function saveDish(){
+ const num=parseInt($('#dN').value,10);
+ if(!(num>0))return toast('Inserisci un numero valido');
+ if(dlist().some(d=>d.num===num&&d.id!==editing))return toast('Il numero '+num+' è già usato');
+ if(!editing&&!pendingImg)return toast('Scegli un\'immagine');
+ const id=editing||uid('d'),img=pendingImg;
+ await W(async()=>{
+  if(img)await DB.set('img/'+id,{data:img});
+  await DB.set('core/dishes/'+id+'/num',num);
+  await DB.set('core/dishes/'+id+'/v',img?Date.now():((S.dishes[id]||{}).v||Date.now()))});
+ A.canceledit()}
+async function exportJ(){
+ try{const core=await DB.get('core'),img=await DB.get('img');
+  const blob=new Blob([JSON.stringify({app:'piatto-segreto',ver:2,session:cleanSession(cfg.session),core:core||{},img:img||{}})],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='piatto_segreto_'+cleanSession(cfg.session)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+ catch(e){toast('Esportazione fallita: '+e.message)}}
+async function importJ(e){
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ let j;try{j=JSON.parse(await f.text());if(!j||j.app!=='piatto-segreto')throw 0}catch(x){return toast('File di backup non valido')}
+ if(!await ask('Importare il backup? Sostituisce TUTTI i dati della sessione corrente.','Importa'))return;
+ W(async()=>{await DB.del('img');await DB.del('core');await DB.set('img',Object.keys(j.img||{}).length?j.img:null);await DB.set('core',j.core||null);toast('Backup importato')})}
+
+/* ---------- avvio ---------- */
+setConn(true);rHome();poll();
+</script>
+</body>
+</html>
